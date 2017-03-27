@@ -1,50 +1,39 @@
 package pqlib_test
-//
-//import (
-//	"github.com/lib/pq"
-//	"log"
-//	"rpp.de/BackendLib/base/configbase"
-//	"rpp.de/BackendLib/base/dbbase/postgres"
-//	"rpp.de/BackendLib/base/testbase/assert"
-//	"rpp.de/ReceiptServer/core/db"
-//	"testing"
-//)
-//
-//func initTest(t *testing.T) postgres.Transaction {
-//	logger := testbase.InitSimpleTest(t)
-//	postgres.OpenDatabaseConnection(configbase.GetConfig().Database[0])
-//	db := postgres.New(logger)
-//
-//	return db
-//}
-//
-//func TestScanStruct_simpleSelect(t *testing.T) {
-//	db := initTest(t)
-//
-//	type TestStruct struct {
-//		String string
-//		Int    int8
-//		Bool   bool
-//		Double float32
-//	}
-//
-//	result, err := db.Query("Select 'hello', 42, true, 12.4", postgres.NewArgs())
-//	assert.Nil(err)
-//
-//	counter := 0
-//	for result.HasNext() {
-//		counter++
-//		var toFill TestStruct
-//		err = result.ScanStruct(&toFill)
-//		assert.Nil(err)
-//
-//		assert.Equal(toFill.String, "hello")
-//		assert.Equal(toFill.Int, int8(42))
-//		assert.Equal(toFill.Bool, true)
-//		assert.Equal(toFill.Double, float32(12.4))
-//	}
-//	assert.Equal(counter, 1)
-//}
+
+import (
+	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/test"
+	"testing"
+)
+
+func TestScanStruct_simpleSelect(t *testing.T) {
+	tx, check := test.InitTransactionTest(t)
+
+	type TestStruct struct {
+		String string
+		Int    int8
+		Bool   bool
+		Double float32
+	}
+
+	result, err := tx.Query("Select 'hello', 42, true, 12.4", pqlib.NewArgs())
+	check.Nil(err)
+
+	counter := 0
+	for result.HasNext() {
+		counter++
+		var toFill TestStruct
+		err = result.ScanStruct(&toFill)
+		check.Nil(err)
+
+		check.Equal(toFill.String, "hello")
+		check.Equal(toFill.Int, int8(42))
+		check.Equal(toFill.Bool, true)
+		check.Equal(toFill.Double, float32(12.4))
+	}
+	check.Equal(counter, 1)
+}
+
 //
 //func TestScanStruct_notSupportedField(t *testing.T) {
 //	db := initTest(t)
