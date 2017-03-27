@@ -1,8 +1,8 @@
 package pqaction
 
 import (
-	"github.com/matthiasleuthaeuser/pqlib"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil/pqreflect"
+	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqutil/pqreflect"
 )
 
 func RegisterList(db pqlib.Transaction, entities []interface{}) error {

@@ -3,8 +3,8 @@ package pqlib
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
-	"github.com/matthiasleuthaeuser/pqlib/pqdep"
-	"github.com/matthiasleuthaeuser/timeutil"
+	"github.com/mleuth/pqlib/pqdep"
+	"github.com/mleuth/timeutil"
 )
 
 var db *sql.DB = nil

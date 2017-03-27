@@ -2,7 +2,7 @@ package pqaction
 
 import (
 	"errors"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil/pqreflect"
+	"github.com/mleuth/pqlib/pqutil/pqreflect"
 	"strings"
 	"time"
 )

@@ -1,10 +1,10 @@
 package pqaction
 
 import (
-	"github.com/matthiasleuthaeuser/pqlib"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil/pqreflect"
-	"github.com/matthiasleuthaeuser/timeutil"
+	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqutil"
+	"github.com/mleuth/pqlib/pqutil/pqreflect"
+	"github.com/mleuth/timeutil"
 )
 
 // INSERT INTO table_name (AI, column1,column2,column3,...)

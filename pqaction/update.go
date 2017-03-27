@@ -2,10 +2,10 @@ package pqaction
 
 import (
 	"errors"
-	"github.com/matthiasleuthaeuser/pqlib"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil"
-	"github.com/matthiasleuthaeuser/pqlib/pqutil/pqreflect"
-	"github.com/matthiasleuthaeuser/timeutil"
+	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqutil"
+	"github.com/mleuth/pqlib/pqutil/pqreflect"
+	"github.com/mleuth/timeutil"
 )
 
 //UPDATE table_name
