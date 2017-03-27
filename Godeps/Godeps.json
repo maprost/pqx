@@ -1,0 +1,21 @@
+{
+	"ImportPath": "github.com/matthiasleuthaeuser/pqlib",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-166-g2704adc",
+			"Rev": "2704adc878c21e1329f46f6e56a1c387d788ff94"
+		},
+		{
+			"ImportPath": "github.com/lib/pq/oid",
+			"Comment": "go1.0-cutoff-166-g2704adc",
+			"Rev": "2704adc878c21e1329f46f6e56a1c387d788ff94"
+		},
+		{
+			"ImportPath": "github.com/matthiasleuthaeuser/timeutil",
+			"Rev": "6976535209e3a85e04563e33c6dbcc42d803bdfb"
+		}
+	]
+}
