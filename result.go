@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
+	"reflect"
 	"time"
 )
 
@@ -60,40 +61,75 @@ func (r *Result) init(output interface{}) (valueList []interface{}, afterAction 
 
 	for _, f := range structInfo.Fields() {
 		field := f
-		switch field.TypeInterface().(type) {
-		case string:
+		switch field.Kind() {
+		case reflect.String:
 			var str string
 			valueList = append(valueList, &str)
 			afterAction = append(afterAction, func() {
 				field.SetString(str)
 			})
-		case int, int8, int16, int32, int64:
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			var i int64
 			valueList = append(valueList, &i)
 			afterAction = append(afterAction, func() {
 				field.SetInt(i)
 			})
-		case bool:
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			var i uint64
+			valueList = append(valueList, &i)
+			afterAction = append(afterAction, func() {
+				field.SetUint(i)
+			})
+		case reflect.Bool:
 			var b bool
 			valueList = append(valueList, &b)
 			afterAction = append(afterAction, func() {
 				field.SetBool(b)
 			})
-		case float32, float64:
+		case reflect.Float32, reflect.Float64:
 			var d float64
 			valueList = append(valueList, &d)
 			afterAction = append(afterAction, func() {
 				field.SetFloat(d)
 			})
-		case time.Time:
-			var t time.Time
-			valueList = append(valueList, &t)
-			afterAction = append(afterAction, func() {
-				field.SetTime(t)
-			})
+
 		default:
-			e = errors.New("Not supported field type: " + field.Name() + " (" + field.Type() + ").")
-			return
+			switch field.TypeInterface().(type) {
+			case time.Time:
+				var t time.Time
+				valueList = append(valueList, &t)
+				afterAction = append(afterAction, func() {
+					field.SetTime(t)
+				})
+			case sql.NullBool:
+				var b sql.NullBool
+				valueList = append(valueList, &b)
+				afterAction = append(afterAction, func() {
+					field.SetNullBool(b)
+				})
+			case sql.NullString:
+				var s sql.NullString
+				valueList = append(valueList, &s)
+				afterAction = append(afterAction, func() {
+					field.SetNullString(s)
+				})
+			case sql.NullInt64:
+				var i sql.NullInt64
+				valueList = append(valueList, &i)
+				afterAction = append(afterAction, func() {
+					field.SetNullInt64(i)
+				})
+			case sql.NullFloat64:
+				var f sql.NullFloat64
+				valueList = append(valueList, &f)
+				afterAction = append(afterAction, func() {
+					field.SetNullFloat64(f)
+				})
+			default:
+				e = errors.New("Not supported field type: " + field.Name() + " (" + field.Type() + ").")
+				return
+			}
+
 		}
 	}
 

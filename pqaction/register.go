@@ -5,9 +5,9 @@ import (
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
 )
 
-func RegisterList(db pqlib.Transaction, entities []interface{}) error {
+func RegisterList(tx pqlib.Transaction, entities []interface{}) error {
 	for _, entity := range entities {
-		e := Register(db, entity)
+		e := Register(tx, entity)
 		if e != nil {
 			return e
 		}
@@ -16,10 +16,10 @@ func RegisterList(db pqlib.Transaction, entities []interface{}) error {
 	return nil
 }
 
-func Register(db pqlib.Transaction, entity interface{}) error {
+func Register(tx pqlib.Transaction, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
-	exists, e := tableExists(db, structInfo)
+	exists, e := tableExists(tx, structInfo)
 	if e != nil {
 		return e
 	}
@@ -27,13 +27,13 @@ func Register(db pqlib.Transaction, entity interface{}) error {
 		return nil
 	}
 
-	e = Create(db, entity)
+	e = Create(tx, entity)
 	return e
 }
 
-func tableExists(db pqlib.Transaction, structInfo pqreflect.StructInfo) (bool, error) {
+func tableExists(tx pqlib.Transaction, structInfo pqreflect.StructInfo) (bool, error) {
 	args := pqlib.NewArgs()
-	result, e := db.Query(
+	result, e := tx.Query(
 		"SELECT table_name FROM INFORMATION_SCHEMA.TABLES "+
 			"WHERE TABLE_NAME = "+args.Next(structInfo.Name()), args)
 	if e != nil {

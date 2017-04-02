@@ -12,8 +12,8 @@ import (
 //SET column1 = value1,
 //column2 = value2,
 //...
-//WHERE PK = valueX
-func Update(db pqlib.Transaction, entity interface{}) error {
+//WHERE PK = valueX (with PK tag)
+func Update(tx pqlib.Transaction, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	sets := ""
@@ -44,7 +44,7 @@ func Update(db pqlib.Transaction, entity interface{}) error {
 
 	// execute statement
 	sql := "UPDATE " + structInfo.Name() + " SET " + sets + " WHERE " + whereClause
-	_, e := db.Query(sql, args)
+	_, e := tx.Query(sql, args)
 	if e != nil {
 		return e
 	}

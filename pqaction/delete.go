@@ -8,13 +8,13 @@ import (
 
 // DELETE FROM table_name
 // WHERE PK = value;
-func Delete(db pqlib.Transaction, entity interface{}) error {
+func Delete(tx pqlib.Transaction, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	// search for key
 	for _, field := range structInfo.Fields() {
 		if isPrimaryKey(field) {
-			return deleteByKeyValue(db, structInfo, field.Name(), field.GetValue())
+			return deleteByKeyValue(tx, structInfo, field.Name(), field.GetValue())
 		}
 	}
 	return errors.New("No primary key available.")
@@ -22,13 +22,13 @@ func Delete(db pqlib.Transaction, entity interface{}) error {
 
 // DELETE FROM table_name
 // WHERE key = value;
-func DeleteByKeyValue(db pqlib.Transaction, key string, entity interface{}) error {
+func DeleteByKeyValue(tx pqlib.Transaction, key string, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	// search for key
 	for _, field := range structInfo.Fields() {
 		if field.Name() == key {
-			return deleteByKeyValue(db, structInfo, field.Name(), field.GetValue())
+			return deleteByKeyValue(tx, structInfo, field.Name(), field.GetValue())
 		}
 	}
 	return errors.New("Not supported field: " + key + ".")
@@ -36,9 +36,9 @@ func DeleteByKeyValue(db pqlib.Transaction, key string, entity interface{}) erro
 
 // DELETE FROM table_name
 // WHERE key = value;
-func deleteByKeyValue(db pqlib.Transaction, structInfo pqreflect.StructInfo, key string, value interface{}) error {
+func deleteByKeyValue(tx pqlib.Transaction, structInfo pqreflect.StructInfo, key string, value interface{}) error {
 	args := pqlib.NewArgs()
 	sql := "DELETE FROM " + structInfo.Name() + " WHERE " + key + " = " + args.Next(value)
-	_, e := db.Query(sql, args)
+	_, e := tx.Query(sql, args)
 	return e
 }

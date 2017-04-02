@@ -20,12 +20,12 @@ func OpenDatabaseConnection(info pqdep.ConnectionInfo) error {
 		}
 	}
 
-	db, e = sql.Open(info.GetDatabaseDriver(),
-		"user="+info.GetUserName()+
-			" dbname="+info.GetDataBase()+
+	db, e = sql.Open(info.DatabaseDriver(),
+		"user="+info.UserName()+
+			" dbname="+info.DataBase()+
 			" sslmode=disable"+
-			" host="+info.GetHost()+
-			" port="+info.GetPort())
+			" host="+info.Host()+
+			" port="+info.Port())
 	return e
 }
 
@@ -45,6 +45,16 @@ func New(logger pqdep.Logger) Transaction {
 	return &transaction{log: logger, tx: nil, lastRows: nil}
 }
 
+func Query(logger pqdep.Logger, sql string, args Args) (Result, error) {
+	rows, e := query(db.Query, logger, sql, args)
+	// check error
+	if e != nil {
+		return Result{}, e
+	}
+
+	return Result{rows: rows, hasNext: false}, nil
+}
+
 func (pq *transaction) Query(sql string, args Args) (Result, error) {
 	e := pq.begin()
 	if e != nil {
@@ -54,13 +64,8 @@ func (pq *transaction) Query(sql string, args Args) (Result, error) {
 	// first close the last rows of the last query
 	pq.closeLastRow()
 
-	// track duration
-	stopwatch := timeutil.NewStopwatch()
-	// execute
-	rows, e := pq.tx.Query(sql, args.get()...)
-	// log sql + duration
-	stopwatch.Stop()
-	pq.log.Printf("[time: "+stopwatch.String()+"] SQL: "+sql, args.get()...)
+	// execute query
+	rows, e := query(pq.tx.Query, pq.log, sql, args)
 	// check error
 	if e != nil {
 		return Result{}, e
@@ -117,4 +122,16 @@ func (pq *transaction) closeLastRow() error {
 		return pq.lastRows.close()
 	}
 	return nil
+}
+
+func query(queryFunc func(query string, args ...interface{}) (*sql.Rows, error), logger pqdep.Logger, sql string, args Args) (*sql.Rows, error) {
+	// track duration
+	stopwatch := timeutil.NewStopwatch()
+	// execute
+	rows, e := queryFunc(sql, args.get()...)
+	// log sql + duration
+	stopwatch.Stop()
+	logger.Printf("[time: "+stopwatch.String()+"] SQL: "+sql, args.get()...)
+
+	return rows, e
 }

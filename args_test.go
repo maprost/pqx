@@ -1,36 +1,34 @@
 package pqlib
 
 import (
-	"github.com/mleuth/timeutil"
-	"github.com/stretchr/testify/require"
+	"github.com/mleuth/assertion"
 	"testing"
 	"time"
 )
 
-const time_format string = "2006-Jan-02 15:04"
-
 func TestSimple(t *testing.T) {
-	check := require.New(t)
+	assert := assertion.New(t)
 
-	tm, e := time.Parse(time_format, "2017-Mar-27 16:00")
-	check.Nil(e)
-	timeutil.Init(tm)
+	tm := time.Now()
+	args := NewArgs()
+
+	assert.Equal(args.Next(12), "$1")
+	assert.Equal(args.Next("Blob"), "$2")
+	assert.Equal(args.Next(tm), "$3")
+	assert.Equal(args.Next(12.4), "$4")
+	assert.Equal(args.Next(true), "$5")
+
+	values := args.get()
+	assert.Len(values, 5)
+	assert.Equal(values, []interface{}{12, "Blob", tm, 12.4, true})
+}
+
+func TestEmpty(t *testing.T) {
+	assert := assertion.New(t)
 
 	args := NewArgs()
 
-	check.Equal(args.Next(12), "$1")
-	check.Equal(args.Next("Blob"), "$2")
-	check.Equal(args.Next(timeutil.Now()), "$3")
-	check.Equal(args.Next(12.4), "$4")
-	check.Equal(args.Next(true), "$5")
-
 	values := args.get()
-	check.Len(values, 5)
-	check.Equal(values[0], 12)
-	check.Equal(values[1], "Blob")
-	check.Equal(values[2], tm)
-	check.Equal(values[3], 12.4)
-	check.Equal(values[4], true)
-
-	timeutil.Reset()
+	assert.NotNil(values)
+	assert.Len(values, 0)
 }

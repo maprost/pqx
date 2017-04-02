@@ -17,27 +17,27 @@ func SelectListWithAlias(entity interface{}, alias string) string {
 	return selectList(structInfo, alias)
 }
 
-func GetSingleEntityById(db pqlib.Transaction, entity interface{}, id int64) error {
+func GetSingleEntityById(tx pqlib.Transaction, entity interface{}, id int64) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	// search for key
 	for _, field := range structInfo.Fields() {
 		if isPrimaryKey(field) {
-			return getSingleEntityByKeyValue(db, structInfo, entity, field.Name(), id)
+			return getSingleEntityByKeyValue(tx, structInfo, entity, field.Name(), id)
 		}
 	}
 	return errors.New("No primary key available.")
 
 }
 
-func GetSingleEntityByKeyValue(db pqlib.Transaction, entity interface{}, key string, value interface{}) error {
+func GetSingleEntityByKeyValue(tx pqlib.Transaction, entity interface{}, key string, value interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
-	return getSingleEntityByKeyValue(db, structInfo, entity, key, value)
+	return getSingleEntityByKeyValue(tx, structInfo, entity, key, value)
 }
 
-func getSingleEntityByKeyValue(db pqlib.Transaction, structInfo pqreflect.StructInfo, entity interface{}, key string, value interface{}) error {
+func getSingleEntityByKeyValue(tx pqlib.Transaction, structInfo pqreflect.StructInfo, entity interface{}, key string, value interface{}) error {
 	args := pqlib.NewArgs()
-	result, err := db.Query(
+	result, err := tx.Query(
 		"Select "+selectList(structInfo, "")+
 			" FROM "+structInfo.Name()+
 			" WHERE "+key+" = "+args.Next(value), args)
@@ -61,26 +61,26 @@ func selectList(structInfo pqreflect.StructInfo, alias string) string {
 	return list
 }
 
-func ContainsEntityById(db pqlib.Transaction, entity interface{}, id int64) (bool, error) {
+func ContainsEntityById(tx pqlib.Transaction, entity interface{}, id int64) (bool, error) {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	// search for key
 	for _, field := range structInfo.Fields() {
 		if isPrimaryKey(field) {
-			return containsEntityByKeyValue(db, structInfo, field.Name(), id)
+			return containsEntityByKeyValue(tx, structInfo, field.Name(), id)
 		}
 	}
 	return false, errors.New("No primary key available.")
 }
 
-func ContainsEntityByKeyValue(db pqlib.Transaction, entity interface{}, key string, value interface{}) (bool, error) {
+func ContainsEntityByKeyValue(tx pqlib.Transaction, entity interface{}, key string, value interface{}) (bool, error) {
 	structInfo := pqreflect.NewStructInfo(entity)
-	return containsEntityByKeyValue(db, structInfo, key, value)
+	return containsEntityByKeyValue(tx, structInfo, key, value)
 }
 
-func containsEntityByKeyValue(db pqlib.Transaction, structInfo pqreflect.StructInfo, key string, value interface{}) (bool, error) {
+func containsEntityByKeyValue(tx pqlib.Transaction, structInfo pqreflect.StructInfo, key string, value interface{}) (bool, error) {
 	args := pqlib.NewArgs()
-	result, e := db.Query(
+	result, e := tx.Query(
 		"Select "+key+
 			" FROM "+structInfo.Name()+
 			" WHERE "+key+" = "+args.Next(value), args)

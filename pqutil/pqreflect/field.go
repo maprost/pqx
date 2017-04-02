@@ -1,6 +1,7 @@
 package pqreflect
 
 import (
+	"database/sql"
 	"reflect"
 	"strings"
 	"time"
@@ -31,6 +32,10 @@ func (f Field) GetInt() int64 {
 	return f.field.Int()
 }
 
+func (f Field) GetUint() uint64 {
+	return f.field.Uint()
+}
+
 func (f Field) GetString() string {
 	return f.field.String()
 }
@@ -47,25 +52,57 @@ func (f Field) GetTime() time.Time {
 	return f.TypeInterface().(time.Time)
 }
 
+func (f Field) GetNullBool() sql.NullBool {
+	return f.TypeInterface().(sql.NullBool)
+}
+
+func (f Field) GetNullString() sql.NullString {
+	return f.TypeInterface().(sql.NullString)
+}
+
+func (f Field) GetNullInt64() sql.NullInt64 {
+	return f.TypeInterface().(sql.NullInt64)
+}
+
+func (f Field) GetNullFloat64() sql.NullFloat64 {
+	return f.TypeInterface().(sql.NullFloat64)
+}
+
 func (f Field) GetValue() interface{} {
-	switch f.TypeInterface().(type) {
-	case string:
+	switch f.Kind() {
+	case reflect.String:
 		return f.GetString()
-	case int, int8, int16, int32, int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return f.GetInt()
-	case bool:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return f.GetUint()
+	case reflect.Bool:
 		return f.GetBool()
-	case float32, float64:
+	case reflect.Float32, reflect.Float64:
 		return f.GetFloat()
-	case time.Time:
-		return f.GetTime()
 	default:
+		switch f.TypeInterface().(type) {
+		case time.Time:
+			return f.GetTime()
+		case sql.NullBool:
+			return f.GetNullBool()
+		case sql.NullString:
+			return f.GetNullString()
+		case sql.NullInt64:
+			return f.GetNullInt64()
+		case sql.NullFloat64:
+			return f.GetNullFloat64()
+		}
 		return nil
 	}
 }
 
 func (f *Field) SetInt(i int64) {
 	f.field.SetInt(i)
+}
+
+func (f *Field) SetUint(i uint64) {
+	f.field.SetUint(i)
 }
 
 func (f *Field) SetString(s string) {
@@ -84,28 +121,26 @@ func (f *Field) SetTime(t time.Time) {
 	f.field.Set(reflect.ValueOf(t))
 }
 
-// that's only a prototype, should do in another way
-func (f *Field) SetValue(value interface{}) {
-	switch reflect.ValueOf(value).Interface().(type) {
-	case string:
-		if v, ok := value.(string); ok {
-			f.SetString(v)
-		}
-	case int, int8, int16, int32, int64:
-		if v, ok := value.(int64); ok {
-			f.SetInt(v)
-		}
-	case bool:
-		if v, ok := value.(bool); ok {
-			f.SetBool(v)
-		}
-	case float32, float64:
-		if v, ok := value.(float64); ok {
-			f.SetFloat(v)
-		}
-	}
+func (f *Field) SetNullBool(b sql.NullBool) {
+	f.field.Set(reflect.ValueOf(b))
+}
+
+func (f *Field) SetNullString(s sql.NullString) {
+	f.field.Set(reflect.ValueOf(s))
+}
+
+func (f *Field) SetNullInt64(i sql.NullInt64) {
+	f.field.Set(reflect.ValueOf(i))
+}
+
+func (f *Field) SetNullFloat64(fl sql.NullFloat64) {
+	f.field.Set(reflect.ValueOf(fl))
 }
 
 func (f Field) TypeInterface() interface{} {
 	return f.field.Interface()
+}
+
+func (f Field) Kind() reflect.Kind {
+	return f.field.Kind()
 }
