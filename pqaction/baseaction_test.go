@@ -178,7 +178,7 @@ func TestTimeColumn_workflow(t *testing.T) {
 	// select time
 	{
 		var toSelect TestTimeColumnStruct
-		e := pqaction.GetSingleEntityById(tx, &toSelect, testStruct.Id)
+		e := pqaction.SelectEntityById(tx, &toSelect, testStruct.Id)
 		assert.Nil(e)
 		assert.Equal(toSelect.Id, testStruct.Id)
 		assert.Equal(toSelect.Expired, now)
@@ -193,7 +193,7 @@ func TestTimeColumn_workflow(t *testing.T) {
 	// select new time
 	{
 		var toSelect TestTimeColumnStruct
-		e := pqaction.GetSingleEntityById(tx, &toSelect, testStruct.Id)
+		e := pqaction.SelectEntityById(tx, &toSelect, testStruct.Id)
 		assert.Nil(e)
 		assert.Equal(toSelect.Id, testStruct.Id)
 		assert.Equal(toSelect.Expired, now)
@@ -269,22 +269,16 @@ func BenchmarkInsertStatement(b *testing.B) {
 		UserId int64
 	}
 
-	testStruct := BenchmarkInsertStruct{
-		Msg:    "Blob",
-		UserId: 42,
-	}
-	err := pqaction.Register(tx, &testStruct)
+	err := pqaction.Register(tx, &BenchmarkInsertStruct{})
 	assert.Nil(err)
 
 	// run the insert function b.N times
-	b.StartTimer()
-	for n := 0; n < b.N; n++ {
+	for n := 0; n < 10; n++ {
 		toInsert := BenchmarkInsertStruct{
 			Msg: "Msg" + strconv.Itoa(n),
 		}
 		pqaction.Insert(tx, &toInsert)
 	}
-	b.StopTimer()
 }
 
 //func BenchmarkPlainInsert(b *testing.B) {

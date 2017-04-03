@@ -3,6 +3,7 @@ package pqaction
 import (
 	"errors"
 	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqdep"
 	"github.com/mleuth/pqlib/pqutil"
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
 	"github.com/mleuth/timeutil"
@@ -13,7 +14,34 @@ import (
 //column2 = value2,
 //...
 //WHERE PK = valueX (with PK tag)
-func Update(tx pqlib.Transaction, entity interface{}) error {
+func Update(entity interface{}) error {
+	return UpdateLg(entity, defaultLogger)
+}
+
+//UPDATE table_name
+//SET column1 = value1,
+//column2 = value2,
+//...
+//WHERE PK = valueX (with PK tag)
+func UpdateLg(entity interface{}, logger pqdep.Logger) error {
+	return updateFunc(queryFuncWrapper(logger), entity)
+}
+
+//UPDATE table_name
+//SET column1 = value1,
+//column2 = value2,
+//...
+//WHERE PK = valueX (with PK tag)
+func UpdateTx(tx pqlib.Transaction, entity interface{}) error {
+	return updateFunc(tx.Query, entity)
+}
+
+//UPDATE table_name
+//SET column1 = value1,
+//column2 = value2,
+//...
+//WHERE PK = valueX (with PK tag)
+func updateFunc(qFunc queryFunc, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	sets := ""
@@ -44,7 +72,7 @@ func Update(tx pqlib.Transaction, entity interface{}) error {
 
 	// execute statement
 	sql := "UPDATE " + structInfo.Name() + " SET " + sets + " WHERE " + whereClause
-	_, e := tx.Query(sql, args)
+	_, e := qFunc(sql, args)
 	if e != nil {
 		return e
 	}

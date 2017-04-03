@@ -29,6 +29,16 @@ func OpenDatabaseConnection(info pqdep.ConnectionInfo) error {
 	return e
 }
 
+func Query(logger pqdep.Logger, sql string, args Args) (Result, error) {
+	rows, e := query(db.Query, logger, sql, args)
+	// check error
+	if e != nil {
+		return Result{}, e
+	}
+
+	return Result{rows: rows, hasNext: false}, nil
+}
+
 type Transaction interface {
 	Query(sql string, args Args) (Result, error)
 	Commit() error
@@ -43,16 +53,6 @@ type transaction struct {
 
 func New(logger pqdep.Logger) Transaction {
 	return &transaction{log: logger, tx: nil, lastRows: nil}
-}
-
-func Query(logger pqdep.Logger, sql string, args Args) (Result, error) {
-	rows, e := query(db.Query, logger, sql, args)
-	// check error
-	if e != nil {
-		return Result{}, e
-	}
-
-	return Result{rows: rows, hasNext: false}, nil
 }
 
 func (pq *transaction) Query(sql string, args Args) (Result, error) {

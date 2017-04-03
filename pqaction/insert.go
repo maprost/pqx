@@ -2,14 +2,36 @@ package pqaction
 
 import (
 	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqdep"
 	"github.com/mleuth/pqlib/pqutil"
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
 	"github.com/mleuth/timeutil"
 )
 
+// Insert insert an entity via pqlib.Query method and use a standard logger for logging.
 // INSERT INTO table_name (AI, column1,column2,column3,...)
 // VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI;
-func Insert(tx pqlib.Transaction, entity interface{}) error {
+func Insert(entity interface{}) error {
+	return InsertLg(entity, defaultLogger)
+}
+
+// InsertLg insert an entity via pqlib.Query method and use a pqdep.Logger for logging.
+// INSERT INTO table_name (AI, column1,column2,column3,...)
+// VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI;
+func InsertLg(entity interface{}, logger pqdep.Logger) error {
+	return insertFunc(queryFuncWrapper(logger), entity)
+} // InsertLg insert an entity via pqlib.Query method and use a pqdep.Logger for logging.
+
+// InsertTx insert an entity over an active transaction.
+// INSERT INTO table_name (AI, column1,column2,column3,...)
+// VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI;
+func InsertTx(tx pqlib.Transaction, entity interface{}) error {
+	return insertFunc(tx.Query, entity)
+}
+
+// INSERT INTO table_name (AI, column1,column2,column3,...)
+// VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI
+func insertFunc(qfunc queryFunc, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	columns := ""
@@ -37,7 +59,7 @@ func Insert(tx pqlib.Transaction, entity interface{}) error {
 
 	// execute statement
 	sql := "INSERT INTO " + structInfo.Name() + " (" + columns + ") VALUES (" + values + ")" + returning
-	result, e := tx.Query(sql, args)
+	result, e := qfunc(sql, args)
 	if e != nil {
 		return e
 	}
