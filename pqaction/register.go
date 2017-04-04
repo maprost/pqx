@@ -27,7 +27,7 @@ func Register(tx pqlib.Transaction, entity interface{}) error {
 		return nil
 	}
 
-	e = Create(tx, entity)
+	e = CreateTx(tx, entity)
 	return e
 }
 

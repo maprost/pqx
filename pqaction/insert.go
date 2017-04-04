@@ -8,11 +8,11 @@ import (
 	"github.com/mleuth/timeutil"
 )
 
-// Insert insert an entity via pqlib.Query method and use a standard logger for logging.
+// Insert an entity via pqlib.Query method and use a default logger for logging.
 // INSERT INTO table_name (AI, column1,column2,column3,...)
 // VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI;
 func Insert(entity interface{}) error {
-	return InsertLg(entity, defaultLogger)
+	return InsertLg(entity, pqutil.DefaultLogger)
 }
 
 // InsertLg insert an entity via pqlib.Query method and use a pqdep.Logger for logging.

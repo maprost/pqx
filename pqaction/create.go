@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/mleuth/pqlib"
+	"github.com/mleuth/pqlib/pqdep"
 	"github.com/mleuth/pqlib/pqutil"
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
 	"reflect"
@@ -22,13 +23,46 @@ import (
  	entities contains only primitive types
 */
 
+// Create an entity via pqlib.Query method and use a default logger for logging.
 // CREATE (
 // 		id TYPE PRIMARY KEY,
 // 		att1 TYPE,
 // 		att2 TYPE
 //		Unique(att1, att2)
 // )
-func Create(tx pqlib.Transaction, entity interface{}) error {
+func Create(entity interface{}) error {
+	return CreateLg(entity, pqutil.DefaultLogger)
+}
+
+// CreateLg create an entity via pqlib.Query method and use a pqdep.Logger for logging.
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func CreateLg(entity interface{}, logger pqdep.Logger) error {
+	return createFunc(queryFuncWrapper(logger), entity)
+}
+
+// CreateTx create an entity over an active transaction.
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func CreateTx(tx pqlib.Transaction, entity interface{}) error {
+	return createFunc(tx.Query, entity)
+}
+
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func createFunc(qFunc queryFunc, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	lines := ""
@@ -47,8 +81,9 @@ func Create(tx pqlib.Transaction, entity interface{}) error {
 	}
 
 	// TODO: insert unique and foreign keys
-	sql := "CREATE TABLE " + structInfo.Name() + "(\n" + lines + "\n)"
-	_, e := tx.Query(sql, pqlib.NewArgs())
+	_, e := qFunc(
+		"CREATE TABLE "+structInfo.Name()+"(\n"+lines+"\n)",
+		pqlib.NewArgs())
 	return e
 }
 

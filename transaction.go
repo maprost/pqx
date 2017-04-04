@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"github.com/mleuth/pqlib/pqdep"
+	"github.com/mleuth/pqlib/pqutil"
 	"github.com/mleuth/timeutil"
 )
 
@@ -51,7 +52,11 @@ type transaction struct {
 	lastRows *Result
 }
 
-func New(logger pqdep.Logger) Transaction {
+func New() Transaction {
+	return NewLg(pqutil.DefaultLogger)
+}
+
+func NewLg(logger pqdep.Logger) Transaction {
 	return &transaction{log: logger, tx: nil, lastRows: nil}
 }
 

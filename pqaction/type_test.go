@@ -32,7 +32,7 @@ func TestNullableType(t *testing.T) {
 		Sum:     sql.NullFloat64{Valid: false},
 		Counter: sql.NullInt64{Valid: false},
 	}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.Id, ID(1))
 

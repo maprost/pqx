@@ -34,7 +34,7 @@ func TestSimpleWorkflow(t *testing.T) {
 
 	// insert entity
 	entity := TestSimpleWorkflowStruct{Msg: "hello", UserId: 42}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.Id, int64(1))
 
@@ -55,7 +55,7 @@ func TestSimpleWorkflow(t *testing.T) {
 
 	// update entity
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> 1, "world", 42
@@ -74,7 +74,7 @@ func TestSimpleWorkflow(t *testing.T) {
 	}
 
 	// delete entity
-	e = pqaction.Delete(tx, &entity)
+	e = pqaction.DeleteTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> nothing found
@@ -102,7 +102,7 @@ func TestUpdateWithoutID(t *testing.T) {
 
 	// insert entity
 	entity := TestUpdateWithoutIDStruct{Msg: "hello", UserID: 42}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> 42, "hello"
@@ -120,7 +120,7 @@ func TestUpdateWithoutID(t *testing.T) {
 
 	// try to update entity -> eor
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.NotNil(e)
 	assert.Equal(e.Error(), "No primary key available.")
 
@@ -138,7 +138,7 @@ func TestUpdateWithoutID(t *testing.T) {
 	}
 
 	// try to delete entity -> eor
-	e = pqaction.Delete(tx, &entity)
+	e = pqaction.DeleteTx(tx, &entity)
 	assert.NotNil(e)
 	assert.Equal(e.Error(), "No primary key available.")
 
@@ -172,7 +172,7 @@ func TestTimeColumn_workflow(t *testing.T) {
 	// insert time
 	now := timeutil.Now()
 	testStruct.Expired = now
-	e := pqaction.Insert(tx, &testStruct)
+	e := pqaction.InsertTx(tx, &testStruct)
 	assert.Nil(e)
 
 	// select time
@@ -187,7 +187,7 @@ func TestTimeColumn_workflow(t *testing.T) {
 	// update time
 	now = timeutil.AddDays(now, 1)
 	testStruct.Expired = now
-	e = pqaction.Update(tx, &testStruct)
+	e = pqaction.UpdateTx(tx, &testStruct)
 	assert.Nil(e)
 
 	// select new time
@@ -213,7 +213,7 @@ func TestTimeColumn_withSelectOperations(t *testing.T) {
 	// insert time
 	now := timeutil.Now()
 	testStruct.Time = now
-	e := pqaction.Insert(tx, &testStruct)
+	e := pqaction.InsertTx(tx, &testStruct)
 	assert.Nil(e)
 
 	// select time -> equal
@@ -277,7 +277,7 @@ func BenchmarkInsertStatement(b *testing.B) {
 		toInsert := BenchmarkInsertStruct{
 			Msg: "Msg" + strconv.Itoa(n),
 		}
-		pqaction.Insert(tx, &toInsert)
+		pqaction.InsertTx(tx, &toInsert)
 	}
 }
 

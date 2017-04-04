@@ -9,15 +9,17 @@ import (
 	"github.com/mleuth/timeutil"
 )
 
+// Update an entity via pqlib.Query method and use a default logger for logging.
 //UPDATE table_name
 //SET column1 = value1,
 //column2 = value2,
 //...
 //WHERE PK = valueX (with PK tag)
 func Update(entity interface{}) error {
-	return UpdateLg(entity, defaultLogger)
+	return UpdateLg(entity, pqutil.DefaultLogger)
 }
 
+// UpdateLg update an entity via pqlib.Query method and use a pqdep.Logger for logging.
 //UPDATE table_name
 //SET column1 = value1,
 //column2 = value2,

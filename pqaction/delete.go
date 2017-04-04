@@ -4,21 +4,25 @@ import (
 	"errors"
 	"github.com/mleuth/pqlib"
 	"github.com/mleuth/pqlib/pqdep"
+	"github.com/mleuth/pqlib/pqutil"
 	"github.com/mleuth/pqlib/pqutil/pqreflect"
 )
 
+// Delete an entity via pqlib.Query method and use a default logger for logging.
 // DELETE FROM table_name
 // WHERE PK = value;
 func Delete(entity interface{}) error {
-	return DeleteLg(entity, defaultLogger)
+	return DeleteLg(entity, pqutil.DefaultLogger)
 }
 
+// DeleteLg delete an entity via pqlib.Query method and use a pqdep.Logger for logging.
 // DELETE FROM table_name
 // WHERE PK = value;
 func DeleteLg(entity interface{}, logger pqdep.Logger) error {
 	return delete(queryFuncWrapper(logger), entity)
 }
 
+// DeleteTx delete an entity over an active transaction.
 // DELETE FROM table_name
 // WHERE PK = value;
 func DeleteTx(tx pqlib.Transaction, entity interface{}) error {
@@ -37,38 +41,6 @@ func delete(qFunc queryFunc, entity interface{}) error {
 		}
 	}
 	return errors.New("No primary key available.")
-}
-
-// DELETE FROM table_name
-// WHERE key = value;
-func DeleteByKeyValue(key string, entity interface{}) error {
-	return DeleteByKeyValueLg(key, entity, defaultLogger)
-}
-
-// DELETE FROM table_name
-// WHERE key = value;
-func DeleteByKeyValueLg(key string, entity interface{}, logger pqdep.Logger) error {
-	return deleteByKeyValue(queryFuncWrapper(logger), key, entity)
-}
-
-// DELETE FROM table_name
-// WHERE key = value;
-func DeleteByKeyValueTx(tx pqlib.Transaction, key string, entity interface{}) error {
-	return deleteByKeyValue(tx.Query, key, entity)
-}
-
-// DELETE FROM table_name
-// WHERE key = value;
-func deleteByKeyValue(qFunc queryFunc, key string, entity interface{}) error {
-	structInfo := pqreflect.NewStructInfo(entity)
-
-	// search for key
-	for _, field := range structInfo.Fields() {
-		if field.Name() == key {
-			return deleteFunc(qFunc, structInfo, field.Name(), field.GetValue())
-		}
-	}
-	return errors.New("Not supported field: " + key + ".")
 }
 
 // DELETE FROM table_name

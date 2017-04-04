@@ -23,7 +23,7 @@ func TestPKWithAI_workflow(t *testing.T) {
 	entity := TestPKWithAIWorkflowStruct{
 		Msg: "hello",
 	}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 
@@ -43,7 +43,7 @@ func TestPKWithAI_workflow(t *testing.T) {
 
 	// update entity
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> 1, "world", 42
@@ -61,7 +61,7 @@ func TestPKWithAI_workflow(t *testing.T) {
 	}
 
 	// delete entity
-	e = pqaction.Delete(tx, &entity)
+	e = pqaction.DeleteTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> nothing found
@@ -89,7 +89,7 @@ func TestPKWithoutAI(t *testing.T) {
 
 	// insert entity
 	entity := TestPKWithoutAIStruct{PrimKey: -1, Msg: "hello"}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, -1)
 
@@ -120,7 +120,7 @@ func TestPKWithoutAIAndForgetToSetValue(t *testing.T) {
 
 	// insert entity
 	entity := TestPKWithoutAIAndForgetToSetValueStruct{Msg: "hello"}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 0) // default value
 
@@ -151,7 +151,7 @@ func TestAIWithMultiplyInserts(t *testing.T) {
 	// insert entities and select them
 	for id := 1; id <= 10; id++ {
 		entity := TestAIWithMultiplyInsertsStruct{}
-		e := pqaction.Insert(tx, &entity)
+		e := pqaction.InsertTx(tx, &entity)
 		assert.Nil(e)
 		assert.Equal(entity.PrimKey, id)
 
@@ -179,7 +179,7 @@ func TestAIAndSetValue(t *testing.T) {
 
 	// insert entities
 	entity := TestAIAndSetValueStruct{PrimKey: 10}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 
@@ -223,7 +223,7 @@ func TestCreated(t *testing.T) {
 
 	// insert entities
 	entity := TestCreatedStruct{Msg: "hello"}
-	e := pqaction.Insert(tx, &entity) // set 'Created' to timebase.now()
+	e := pqaction.InsertTx(tx, &entity) // set 'Created' to timebase.now()
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Created, yesterday)
@@ -246,7 +246,7 @@ func TestCreated(t *testing.T) {
 
 	timeutil.InitTime(now)
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity) // no change of 'Created'
+	e = pqaction.UpdateTx(tx, &entity) // no change of 'Created'
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Created, yesterday)
@@ -284,7 +284,7 @@ func TestCreatedWithPreSetting(t *testing.T) {
 
 	// insert entities
 	entity := TestCreatedWithPreSettingStruct{Created: tomorrow}
-	e := pqaction.Insert(tx, &entity) // change 'Created' with timebase.now()
+	e := pqaction.InsertTx(tx, &entity) // change 'Created' with timebase.now()
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Created, today)
@@ -319,7 +319,7 @@ func TestChanged(t *testing.T) {
 
 	// insert entities
 	entity := TestChangedStruct{Msg: "hello"}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Changed, yesterday)
@@ -342,7 +342,7 @@ func TestChanged(t *testing.T) {
 
 	timeutil.InitTime(now)
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Changed, now)
@@ -381,7 +381,7 @@ func TestChangedWithPreSetting(t *testing.T) {
 
 	// insert entities
 	entity := TestChangedWithPreSettingStruct{Changed: tomorrow, Msg: "hello"}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Changed, today)
@@ -404,7 +404,7 @@ func TestChangedWithPreSetting(t *testing.T) {
 
 	entity.Changed = tomorrow
 	entity.Msg = "world"
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.PrimKey, 1)
 	assert.Equal(entity.Changed, today)
@@ -446,7 +446,7 @@ func TestAllTagsWorkflow(t *testing.T) {
 	entity := TestAllTagsWorkflowStruct{
 		Msg: "hello",
 	}
-	e := pqaction.Insert(tx, &entity)
+	e := pqaction.InsertTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.Id, int64(1))
 	assert.Equal(entity.Created, today)
@@ -471,7 +471,7 @@ func TestAllTagsWorkflow(t *testing.T) {
 	// update entity
 	entity.Msg = "world"
 	timeutil.InitTime(tomorrow)
-	e = pqaction.Update(tx, &entity)
+	e = pqaction.UpdateTx(tx, &entity)
 	assert.Nil(e)
 	assert.Equal(entity.Created, today)
 	assert.Equal(entity.Changed, tomorrow)
@@ -493,7 +493,7 @@ func TestAllTagsWorkflow(t *testing.T) {
 	}
 
 	// delete entity
-	e = pqaction.Delete(tx, &entity)
+	e = pqaction.DeleteTx(tx, &entity)
 	assert.Nil(e)
 
 	// select entity -> nothing found
