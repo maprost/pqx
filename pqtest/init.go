@@ -37,7 +37,7 @@ func InitTransactionTest(t assertion.TestEnvironment) (pqlib.Transaction, assert
 	e := pqlib.OpenDatabaseConnection(DataInfo{})
 	assert.Nil(e)
 
-	tx := pqlib.New(log.New(os.Stdout, "", 0))
+	tx := pqlib.NewTransaction(log.New(os.Stdout, "", 0))
 
 	return tx, assert
 }

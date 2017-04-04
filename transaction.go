@@ -5,40 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mleuth/pqlib/pqdep"
 	"github.com/mleuth/pqlib/pqutil"
-	"github.com/mleuth/timeutil"
 )
-
-var db *sql.DB = nil
-
-func OpenDatabaseConnection(info pqdep.ConnectionInfo) error {
-	var e error
-
-	// close old db connection before open a new one
-	if db != nil {
-		e = db.Close()
-		if e != nil {
-			return e
-		}
-	}
-
-	db, e = sql.Open(info.DatabaseDriver(),
-		"user="+info.UserName()+
-			" dbname="+info.DataBase()+
-			" sslmode=disable"+
-			" host="+info.Host()+
-			" port="+info.Port())
-	return e
-}
-
-func Query(logger pqdep.Logger, sql string, args Args) (Result, error) {
-	rows, e := query(db.Query, logger, sql, args)
-	// check error
-	if e != nil {
-		return Result{}, e
-	}
-
-	return Result{rows: rows, hasNext: false}, nil
-}
 
 type Transaction interface {
 	Query(sql string, args Args) (Result, error)
@@ -52,11 +19,11 @@ type transaction struct {
 	lastRows *Result
 }
 
-func New() Transaction {
-	return NewLg(pqutil.DefaultLogger)
+func NewTransaction() Transaction {
+	return NewTransactionLg(pqutil.DefaultLogger)
 }
 
-func NewLg(logger pqdep.Logger) Transaction {
+func NewTransactionLg(logger pqdep.Logger) Transaction {
 	return &transaction{log: logger, tx: nil, lastRows: nil}
 }
 
@@ -70,14 +37,13 @@ func (pq *transaction) Query(sql string, args Args) (Result, error) {
 	pq.closeLastRow()
 
 	// execute query
-	rows, e := query(pq.tx.Query, pq.log, sql, args)
-	// check error
+	result, e := queryFunc(pq.tx.Query, pq.log, sql, args)
 	if e != nil {
 		return Result{}, e
 	}
 
-	pq.lastRows = &Result{rows: rows, hasNext: false}
-	return *pq.lastRows, nil
+	pq.lastRows = &result
+	return result, nil
 }
 
 func (pq *transaction) Commit() error {
@@ -127,16 +93,4 @@ func (pq *transaction) closeLastRow() error {
 		return pq.lastRows.close()
 	}
 	return nil
-}
-
-func query(queryFunc func(query string, args ...interface{}) (*sql.Rows, error), logger pqdep.Logger, sql string, args Args) (*sql.Rows, error) {
-	// track duration
-	stopwatch := timeutil.NewStopwatch()
-	// execute
-	rows, e := queryFunc(sql, args.get()...)
-	// log sql + duration
-	stopwatch.Stop()
-	logger.Printf("[time: "+stopwatch.String()+"] SQL: "+sql, args.get()...)
-
-	return rows, e
 }
