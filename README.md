@@ -1,6 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/mleuth/pqlib?status.svg)](https://godoc.org/github.com/mleuth/pqlib)
 
-# pqlib
+# pqx
 Small lightweight postgres library.
 
 ## Actions
