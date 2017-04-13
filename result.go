@@ -1,45 +1,47 @@
-package pqlib
+package pqx
 
 import (
 	"database/sql"
 	"errors"
-	"github.com/mleuth/pqlib/pqutil/pqreflect"
+	"github.com/maprost/pqx/pqutil/pqreflect"
 	"reflect"
 	"time"
 )
 
-type Result struct {
-	rows    *sql.Rows
-	hasNext bool
+//type Result struct {
+//	rows    *sql.Rows
+//	hasNext bool
+//}
+//
+//func (r *Result) HasNext() bool {
+//	if r.hasNext == false {
+//		r.hasNext = r.rows.Next()
+//	}
+//	return r.hasNext
+//}
+//
+//func (r *Result) Scan(output ...interface{}) error {
+//	defer r.resetHasNext()
+//
+//	// is there something to scan?
+//	if r.HasNext() == false {
+//		return errors.New("No rows available.")
+//	}
+//
+//	e := r.rows.Scan(output...)
+//	if e != nil {
+//		return e
+//	}
+//
+//	return nil
+//}
+
+type Result interface {
+	Scan(dest ...interface{}) error
 }
 
-func (r *Result) HasNext() bool {
-	if r.hasNext == false {
-		r.hasNext = r.rows.Next()
-	}
-	return r.hasNext
-}
-
-func (r *Result) Scan(output ...interface{}) error {
-	defer r.resetHasNext()
-
-	// is there something to scan?
-	if r.HasNext() == false {
-		return errors.New("No rows available.")
-	}
-
-	e := r.rows.Scan(output...)
-	if e != nil {
-		return e
-	}
-
-	return nil
-}
-
-func (r *Result) ScanStruct(output interface{}) error {
-	defer r.resetHasNext()
-
-	valueList, afterAction, err := r.init(output)
+func ScanStruct(r Result, output interface{}) error {
+	valueList, afterAction, err := initScan(output)
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,7 @@ func (r *Result) ScanStruct(output interface{}) error {
 	return nil
 }
 
-func (r *Result) init(output interface{}) (valueList []interface{}, afterAction []func(), e error) {
+func initScan(output interface{}) (valueList []interface{}, afterAction []func(), e error) {
 	structInfo := pqreflect.NewStructInfo(output)
 
 	for _, f := range structInfo.Fields() {
@@ -136,10 +138,10 @@ func (r *Result) init(output interface{}) (valueList []interface{}, afterAction 
 	return
 }
 
-func (r *Result) close() error {
-	return r.rows.Close()
-}
-
-func (r *Result) resetHasNext() {
-	r.hasNext = false
-}
+//func (r *Result) close() error {
+//	return r.rows.Close()
+//}
+//
+//func (r *Result) resetHasNext() {
+//	r.hasNext = false
+//}

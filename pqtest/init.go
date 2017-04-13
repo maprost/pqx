@@ -1,9 +1,9 @@
 package pqtest
 
 import (
-	"github.com/mleuth/assertion"
-	"github.com/mleuth/pqlib"
-	"github.com/mleuth/timeutil"
+	"github.com/maprost/assertion"
+	"github.com/maprost/pqx"
+	"github.com/maprost/timeutil"
 	"log"
 	"os"
 )
@@ -30,14 +30,22 @@ func (d DataInfo) UserName() string {
 	return "postgres"
 }
 
-func InitTransactionTest(t assertion.TestEnvironment) (pqlib.Transaction, assertion.Assert) {
+func InitDatabaseTest(t assertion.TestEnvironment) assertion.Assert {
 	timeutil.Reset()
-
 	assert := assertion.New(t)
-	e := pqlib.OpenDatabaseConnection(DataInfo{})
-	assert.Nil(e)
 
-	tx := pqlib.NewTransaction(log.New(os.Stdout, "", 0))
+	err := pqx.OpenDatabaseConnection(DataInfo{})
+	assert.Nil(err)
+
+	return assert
+}
+
+func InitTransactionTest(t assertion.TestEnvironment) (pqx.Transaction, assertion.Assert) {
+	assert := InitDatabaseTest(t)
+
+	tx, err := pqx.New()
+	assert.Nil(err)
+	tx.AddLogger(log.New(os.Stdout, "", 0))
 
 	return tx, assert
 }

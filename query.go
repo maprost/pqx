@@ -1,31 +1,22 @@
-package pqlib
+package pqx
 
 import (
-	"database/sql"
-	"github.com/mleuth/pqlib/pqdep"
-	"github.com/mleuth/pqlib/pqutil"
-	"github.com/mleuth/timeutil"
+	"github.com/maprost/pqlib/pqarg"
+	"github.com/maprost/pqlib/pqdep"
+	"github.com/maprost/pqlib/pqutil"
+	"time"
 )
 
-func Query(sql string, args Args) (Result, error) {
-	return queryFunc(db.Query, pqutil.DefaultLogger, sql, args)
+func QueryFunc(queryFunc func(sql string, args ...interface{}), sql string, args pqarg.Args) {
+	LogQueryFunc(queryFunc, pqutil.DefaultLogger, sql, args)
 }
 
-func QueryLg(logger pqdep.Logger, sql string, args Args) (Result, error) {
-	return queryFunc(db.Query, logger, sql, args)
-}
-
-func queryFunc(qFunc func(query string, args ...interface{}) (*sql.Rows, error), logger pqdep.Logger, sql string, args Args) (Result, error) {
+func LogQueryFunc(queryFunc func(sql string, args ...interface{}), logger pqdep.Logger, sql string, args pqarg.Args) {
 	// track duration
-	stopwatch := timeutil.NewStopwatch()
+	start := time.Now()
 	// execute
-	rows, e := qFunc(sql, args.get()...)
+	queryFunc(sql, args.Get()...)
 	// log sql + duration
-	stopwatch.Stop()
-	logger.Printf("[time: "+stopwatch.String()+"] SQL: "+sql, args.get()...)
-	if e != nil {
-		return Result{}, e
-	}
-
-	return Result{rows: rows, hasNext: false}, nil
+	elapsed := time.Now().Sub(start)
+	logger.Printf("[time: "+elapsed.String()+"] SQL: "+sql, args.Get()...)
 }
