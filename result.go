@@ -8,34 +8,6 @@ import (
 	"time"
 )
 
-//type Result struct {
-//	rows    *sql.Rows
-//	hasNext bool
-//}
-//
-//func (r *Result) HasNext() bool {
-//	if r.hasNext == false {
-//		r.hasNext = r.rows.Next()
-//	}
-//	return r.hasNext
-//}
-//
-//func (r *Result) Scan(output ...interface{}) error {
-//	defer r.resetHasNext()
-//
-//	// is there something to scan?
-//	if r.HasNext() == false {
-//		return errors.New("No rows available.")
-//	}
-//
-//	e := r.rows.Scan(output...)
-//	if e != nil {
-//		return e
-//	}
-//
-//	return nil
-//}
-
 type Result interface {
 	Scan(dest ...interface{}) error
 }
@@ -137,11 +109,3 @@ func initScan(output interface{}) (valueList []interface{}, afterAction []func()
 
 	return
 }
-
-//func (r *Result) close() error {
-//	return r.rows.Close()
-//}
-//
-//func (r *Result) resetHasNext() {
-//	r.hasNext = false
-//}

@@ -2,36 +2,85 @@ package pqx
 
 import (
 	"errors"
+	"github.com/maprost/pqx/pqarg"
+	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqutil"
 	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
-func SelectEntityById(tx pqlib.Transaction, entity interface{}, id int64) error {
+// Select an entity via pqx.LogQuery and use a default logger for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func Select(entity interface{}) (bool, error) {
+	return LogSelect(entity, pqutil.DefaultLogger)
+}
+
+// LogSelect select an entity via pqx.LogQuery and use a default logger for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func LogSelect(entity interface{}, logger pqdep.Logger) (bool, error) {
+	return prepareSelect(queryFuncWrapper(logger), entity)
+}
+
+// Select an entity via tx.LogQuery and use a tx.log for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func (tx *Transaction) Select(entity interface{}) (bool, error) {
+	return prepareSelect(tx.Query, entity)
+}
+
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func prepareSelect(qFunc queryFunc, entity interface{}) (bool, error) {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	// search for key
 	for _, field := range structInfo.Fields() {
 		if isPrimaryKey(field) {
-			return selectEntityByKeyValue(tx, structInfo, entity, field.Name(), id)
+			return selectFunc(qFunc, structInfo, entity, field.Name(), field.GetValue())
 		}
 	}
-	return errors.New("No primary key available.")
+	return false, errors.New("No primary key available.")
 
 }
 
-func SelectEntityByKeyValue(tx pqlib.Transaction, entity interface{}, key string, value interface{}) error {
+// Select an entity via pqx.LogQuery and use a default logger for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func SelectByKeyValue(key string, value interface{}, entity interface{}) (bool, error) {
+	return LogSelectByKeyValue(key, value, entity, pqutil.DefaultLogger)
+}
+
+// LogSelect select an entity via pqx.LogQuery and use a default logger for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func LogSelectByKeyValue(key string, value interface{}, entity interface{}, logger pqdep.Logger) (bool, error) {
+	return prepareSelectByKeyValue(queryFuncWrapper(logger), key, value, entity)
+}
+
+// Select an entity via tx.LogQuery and use a tx.log for logging.
+// SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
+func (tx *Transaction) SelectByKeyValue(key string, value interface{}, entity interface{}) (bool, error) {
+	return prepareSelectByKeyValue(tx.Query, key, value, entity)
+}
+
+// SELECT column1, column2,... FROM table_name WHERE key = value
+func prepareSelectByKeyValue(qFunc queryFunc, key string, value interface{}, entity interface{}) (bool, error) {
 	structInfo := pqreflect.NewStructInfo(entity)
-	return selectEntityByKeyValue(tx, structInfo, entity, key, value)
+	return selectFunc(qFunc, structInfo, entity, key, value)
 }
 
-func selectEntityByKeyValue(tx pqlib.Transaction, structInfo pqreflect.StructInfo, entity interface{}, key string, value interface{}) error {
-	args := pqlib.NewArgs()
-	result, err := tx.Query(
-		"Select "+selectList(structInfo, "")+
-			" FROM "+structInfo.Name()+
-			" WHERE "+key+" = "+args.Next(value), args)
+// SELECT column1, column2,... FROM table_name WHERE key = value
+func selectFunc(qFunc queryFunc, structInfo pqreflect.StructInfo, entity interface{}, key string, value interface{}) (bool, error) {
+	args := pqarg.New()
+	sql := "Select " + selectList(structInfo, "") +
+		" FROM " + structInfo.Name() +
+		" WHERE " + key + " = " + args.Next(value)
+
+	rows, err := qFunc(sql, args)
+	defer closeRows(rows)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return result.ScanStruct(entity)
+	if rows.Next() == false {
+		return false, nil
+	}
+
+	err = ScanStruct(rows, entity)
+	return err == nil, err
 }

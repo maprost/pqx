@@ -2,7 +2,7 @@ package pqarg_test
 
 import (
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqlib/pqarg"
+	"github.com/maprost/pqx/pqarg"
 	"testing"
 	"time"
 )

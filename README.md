@@ -10,10 +10,6 @@ Small lightweight postgres library.
 - create
 - register
 
-### Extension
-- `Lg` - You can use your own logger with this function.
-- `Tx` - You can use the function with a transaction.
-
 ## Supported Types
 - int8, int16, int/int32, int64
 - float32, float64

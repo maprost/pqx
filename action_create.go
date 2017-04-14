@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/maprost/pqx/pqarg"
+	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqutil"
 	"github.com/maprost/pqx/pqutil/pqreflect"
 	"reflect"
@@ -22,13 +23,46 @@ import (
  	entities contains only primitive types
 */
 
+// Create an entity via pqx.LogQuery and use a default logger for logging.
 // CREATE (
 // 		id TYPE PRIMARY KEY,
 // 		att1 TYPE,
 // 		att2 TYPE
 //		Unique(att1, att2)
 // )
-func Create(qFunc queryFunc, entity interface{}) error {
+func Create(entity interface{}) error {
+	return LogCreate(entity, pqutil.DefaultLogger)
+}
+
+// LogCreate create an entity via pqx.LogQuery and use the given pqdep.Logger for logging.
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func LogCreate(entity interface{}, logger pqdep.Logger) error {
+	return createFunc(queryFuncWrapper(logger), entity)
+}
+
+// Create an entity via tx.Query and use the given tx.log for logging.
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func (tx *Transaction) Create(entity interface{}) error {
+	return createFunc(tx.Query, entity)
+}
+
+// CREATE (
+// 		id TYPE PRIMARY KEY,
+// 		att1 TYPE,
+// 		att2 TYPE
+//		Unique(att1, att2)
+// )
+func createFunc(qFunc queryFunc, entity interface{}) error {
 	structInfo := pqreflect.NewStructInfo(entity)
 
 	lines := ""
@@ -47,9 +81,9 @@ func Create(qFunc queryFunc, entity interface{}) error {
 	}
 
 	// TODO: insert unique and foreign keys
-	_, e := qFunc(
-		"CREATE TABLE "+structInfo.Name()+"(\n"+lines+"\n)",
-		pqarg.New())
+	sql := "CREATE TABLE " + structInfo.Name() + "(\n" + lines + "\n)"
+	rows, e := qFunc(sql, pqarg.New())
+	defer closeRows(rows)
 	return e
 }
 

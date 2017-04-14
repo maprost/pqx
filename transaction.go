@@ -13,7 +13,7 @@ type Transaction struct {
 }
 
 func New() (Transaction, error) {
-	tx, err := pqdb.DB.Begin()
+	tx, err := DB.Begin()
 
 	return Transaction{
 		log: pqutil.DefaultLogger,
@@ -27,8 +27,8 @@ func (tx *Transaction) AddLogger(logger pqdep.Logger) {
 
 func (tx *Transaction) Query(sql string, args pqarg.Args) (rows *sql.Rows, err error) {
 
-	pqlib.LogQueryFunc(func(sql string, args ...interface{}) {
-		rows, err = tx.Query(sql, args...)
+	logWrapper(func(sql string, args ...interface{}) {
+		rows, err = tx.tx.Query(sql, args...)
 	}, tx.log, sql, args)
 
 	return
@@ -36,8 +36,8 @@ func (tx *Transaction) Query(sql string, args pqarg.Args) (rows *sql.Rows, err e
 
 func (tx *Transaction) QueryRow(sql string, args pqarg.Args) (row *sql.Row) {
 
-	pqlib.LogQueryFunc(func(sql string, args ...interface{}) {
-		row = tx.QueryRow(sql, args...)
+	logWrapper(func(sql string, args ...interface{}) {
+		row = tx.tx.QueryRow(sql, args...)
 	}, tx.log, sql, args)
 
 	return
