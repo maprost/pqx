@@ -22,13 +22,13 @@ Small lightweight pq library extension.
 - Integer:
   - `int8`, `int16`, `int`, `int32`, `int64`
   - `sql.NullInt64` 
-  - `pqnull.Int64`, `pqnull.Int`, `pqnull.Int32`, `pqnull.Int16`, `pqnull.Int8`
+  - `pqnull.Int8`,  `pqnull.Int16`, `pqnull.Int32`, `pqnull.Int`, `pqnull.Int64`
 - Unsigned Integer:
   - `uint8`, `uint16`, `uint`, `uint32`, `uint64`
 - Float:
   - `float32`, `float64`
   - `sql.NullFloat64`
-  - `pqnull.Float64`, `pqnull.Float32`
+  - `pqnull.Float32`, `pqnull.Float64`
 - Boolean:
   - `bool`
   - `sql.NullBool`
