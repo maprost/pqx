@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
 // Delete an entity via pqx.LogQuery and use a default logger for logging.
@@ -32,12 +32,15 @@ func (tx *Transaction) Delete(entity interface{}) error {
 // DELETE FROM table_name
 // WHERE PK = value;
 func prepareDelete(qFunc queryFunc, entity interface{}) error {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.NewCtx(entity, pqtable.Context{OnlyPrimaryKeyColumn: true})
+	if err != nil {
+		return err
+	}
 
 	// search for key
-	for _, field := range structInfo.Fields() {
-		if isPrimaryKey(field) {
-			return deleteFunc(qFunc, structInfo, field.Name(), field.GetValue())
+	for _, column := range table.Columns() {
+		if column.PrimaryKeyTag() {
+			return deleteFunc(qFunc, table, column.Name(), column.GetValue())
 		}
 	}
 	return errors.New("No primary key available.")
@@ -45,9 +48,9 @@ func prepareDelete(qFunc queryFunc, entity interface{}) error {
 
 // DELETE FROM table_name
 // WHERE key = value;
-func deleteFunc(qFunc queryFunc, structInfo pqreflect.StructInfo, key string, value interface{}) error {
+func deleteFunc(qFunc queryFunc, table *pqtable.Table, key string, value interface{}) error {
 	args := pqarg.New()
-	sql := "DELETE FROM " + structInfo.Name() + " WHERE " + key + " = " + args.Next(value)
+	sql := "DELETE FROM " + table.Name() + " WHERE " + key + " = " + args.Next(value)
 	rows, err := qFunc(sql, args)
 	closeRows(rows)
 	return err

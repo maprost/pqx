@@ -29,7 +29,7 @@ func (tx *Transaction) Query(sql string, args pqarg.Args) (rows *sql.Rows, err e
 
 	logWrapper(func(sql string, args ...interface{}) {
 		rows, err = tx.tx.Query(sql, args...)
-	}, tx.log, sql, args)
+	}, sql, args, tx.log)
 
 	return
 }
@@ -38,7 +38,7 @@ func (tx *Transaction) QueryRow(sql string, args pqarg.Args) (row *sql.Row) {
 
 	logWrapper(func(sql string, args ...interface{}) {
 		row = tx.tx.QueryRow(sql, args...)
-	}, tx.log, sql, args)
+	}, sql, args, tx.log)
 
 	return
 }

@@ -3,8 +3,10 @@ package pqx
 import (
 	"database/sql"
 	"errors"
-	"github.com/maprost/pqx/pqutil/pqreflect"
-	"reflect"
+	"github.com/lib/pq"
+	"github.com/maprost/pqx/pqnull"
+	"github.com/maprost/pqx/pqtable"
+	"github.com/maprost/pqx/pqtype"
 	"time"
 )
 
@@ -13,9 +15,163 @@ type Result interface {
 }
 
 func ScanStruct(r Result, output interface{}) error {
-	valueList, afterAction, err := initScan(output)
+	table, err := pqtable.New(output)
 	if err != nil {
 		return err
+	}
+
+	return ScanTable(r, table)
+}
+
+func ScanTable(r Result, table *pqtable.Table) (err error) {
+	valueList := make([]interface{}, table.Len())
+	afterAction := make([]func(), table.Len())
+
+	for index, c := range table.Columns() {
+		column := c
+		switch column.ReflectType() {
+		// =============== string =================
+		case pqtype.ReflectString:
+			var s string
+			valueList[index] = &s
+			afterAction[index] = func() {
+				column.SetString(s)
+			}
+		case pqtype.ReflectString_sql:
+			var s sql.NullString
+			valueList[index] = &s
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(s)
+			}
+		case pqtype.ReflectString_pqx:
+			var s pqnull.String
+			valueList[index] = &s
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(s)
+			}
+
+		// =============== integer =================
+		case pqtype.ReflectInt64:
+			var i int64
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetInt64(i)
+			}
+		case pqtype.ReflectInt64_sql:
+			var i sql.NullInt64
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+		case pqtype.ReflectInt64_pqx:
+			var i pqnull.Int64
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+		case pqtype.ReflectInt_pqx:
+			var i pqnull.Int
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+		case pqtype.ReflectInt32_pqx:
+			var i pqnull.Int32
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+		case pqtype.ReflectInt16_pqx:
+			var i pqnull.Int16
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+		case pqtype.ReflectInt8_pqx:
+			var i pqnull.Int8
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(i)
+			}
+
+		// =============== uinteger =================
+		case pqtype.ReflectUInt64:
+			var i uint64
+			valueList[index] = &i
+			afterAction[index] = func() {
+				column.SetUInt64(i)
+			}
+
+		// =============== boolean =================
+		case pqtype.ReflectBool:
+			var b bool
+			valueList[index] = &b
+			afterAction[index] = func() {
+				column.SetBool(b)
+			}
+		case pqtype.ReflectBool_sql:
+			var b sql.NullBool
+			valueList[index] = &b
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(b)
+			}
+		case pqtype.ReflectBool_pqx:
+			var b pqnull.Bool
+			valueList[index] = &b
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(b)
+			}
+
+		// =============== float =================
+		case pqtype.ReflectFloat64:
+			var f float64
+			valueList[index] = &f
+			afterAction[index] = func() {
+				column.SetFloat64(f)
+			}
+		case pqtype.ReflectFloat64_sql:
+			var f sql.NullFloat64
+			valueList[index] = &f
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(f)
+			}
+		case pqtype.ReflectFloat64_pqx:
+			var f pqnull.Float64
+			valueList[index] = &f
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(f)
+			}
+		case pqtype.ReflectFloat32_pqx:
+			var f pqnull.Float32
+			valueList[index] = &f
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(f)
+			}
+
+		// =============== time =================
+		case pqtype.ReflectTime:
+			var t time.Time
+			valueList[index] = &t
+			afterAction[index] = func() {
+				column.SetTime(t)
+			}
+		case pqtype.ReflectTime_pq:
+			var t pq.NullTime
+			valueList[index] = &t
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(t)
+			}
+		case pqtype.ReflectTime_pqx:
+			var t pqnull.Time
+			valueList[index] = &t
+			afterAction[index] = func() {
+				column.SetNullTypeStruct(t)
+			}
+
+		default:
+			err = errors.New("Not supported column type: " + column.Name() + " (" + column.Type().String() + ").")
+			return
+		}
 	}
 
 	err = r.Scan(valueList...)
@@ -28,84 +184,4 @@ func ScanStruct(r Result, output interface{}) error {
 	}
 
 	return nil
-}
-
-func initScan(output interface{}) (valueList []interface{}, afterAction []func(), e error) {
-	structInfo := pqreflect.NewStructInfo(output)
-
-	for _, f := range structInfo.Fields() {
-		field := f
-		switch field.Kind() {
-		case reflect.String:
-			var str string
-			valueList = append(valueList, &str)
-			afterAction = append(afterAction, func() {
-				field.SetString(str)
-			})
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			var i int64
-			valueList = append(valueList, &i)
-			afterAction = append(afterAction, func() {
-				field.SetInt(i)
-			})
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			var i uint64
-			valueList = append(valueList, &i)
-			afterAction = append(afterAction, func() {
-				field.SetUint(i)
-			})
-		case reflect.Bool:
-			var b bool
-			valueList = append(valueList, &b)
-			afterAction = append(afterAction, func() {
-				field.SetBool(b)
-			})
-		case reflect.Float32, reflect.Float64:
-			var d float64
-			valueList = append(valueList, &d)
-			afterAction = append(afterAction, func() {
-				field.SetFloat(d)
-			})
-
-		default:
-			switch field.TypeInterface().(type) {
-			case time.Time:
-				var t time.Time
-				valueList = append(valueList, &t)
-				afterAction = append(afterAction, func() {
-					field.SetTime(t)
-				})
-			case sql.NullBool:
-				var b sql.NullBool
-				valueList = append(valueList, &b)
-				afterAction = append(afterAction, func() {
-					field.SetNullBool(b)
-				})
-			case sql.NullString:
-				var s sql.NullString
-				valueList = append(valueList, &s)
-				afterAction = append(afterAction, func() {
-					field.SetNullString(s)
-				})
-			case sql.NullInt64:
-				var i sql.NullInt64
-				valueList = append(valueList, &i)
-				afterAction = append(afterAction, func() {
-					field.SetNullInt64(i)
-				})
-			case sql.NullFloat64:
-				var f sql.NullFloat64
-				valueList = append(valueList, &f)
-				afterAction = append(afterAction, func() {
-					field.SetNullFloat64(f)
-				})
-			default:
-				e = errors.New("Not supported field type: " + field.Name() + " (" + field.Type() + ").")
-				return
-			}
-
-		}
-	}
-
-	return
 }

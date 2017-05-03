@@ -1,29 +1,23 @@
 package pqx_test
 
 import (
+	"database/sql"
 	"github.com/maprost/pqx"
 	"github.com/maprost/pqx/pqtest"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 	"testing"
 )
-
-func tableName(entity interface{}) string {
-	structInfo := pqreflect.NewStructInfo(entity)
-	return structInfo.Name()
-}
 
 func TestSimpleWorkflow_tx(t *testing.T) {
 	tx, assert := pqtest.InitTransactionTest(t)
 	tx.AddLogger(pqutil.DefaultLogger)
 
 	type TestSimpleWorkflowTxStruct struct {
-		Id     int64 `sql:"PK AI"`
+		Id     int64 `pqx:"PK AI"`
 		Msg    string
 		UserId int64
 	}
-	var testStruct TestSimpleWorkflowTxStruct
-	tx.Register(&testStruct)
+	tx.Register(TestSimpleWorkflowTxStruct{})
 
 	// insert entity
 	entity := TestSimpleWorkflowTxStruct{Msg: "hello", UserId: 42}
@@ -77,7 +71,7 @@ func TestSimpleWorkflow_db(t *testing.T) {
 	assert := pqtest.InitDatabaseTest(t)
 
 	type TestSimpleWorkflowDBStruct struct {
-		Id     int64 `sql:"PK AI"`
+		Id     int64 `pqx:"PK AI"`
 		Msg    string
 		UserId int64
 	}
@@ -124,6 +118,67 @@ func TestSimpleWorkflow_db(t *testing.T) {
 	// select entity -> nothing found
 	{
 		contains, err := pqx.Contains(&TestSimpleWorkflowDBStruct{Id: 1})
+		assert.Nil(err)
+		assert.False(contains)
+	}
+}
+
+func TestSimpleWorkflow_allTypes(t *testing.T) {
+	assert := pqtest.InitDatabaseTest(t)
+
+	type TestSimpleWorkflowAllTypesStruct struct {
+		Id     int64 `pqx:"PK AI"`
+		Msg    string
+		Blob   int
+		UserId sql.NullInt64
+	}
+
+	err := pqx.Register(TestSimpleWorkflowAllTypesStruct{})
+	assert.Nil(err)
+
+	// insert entity
+	entity := TestSimpleWorkflowAllTypesStruct{Msg: "hello", Blob: 42}
+	err = pqx.Insert(&entity)
+	assert.Nil(err)
+	assert.Equal(entity.Id, int64(1))
+
+	// select entity -> 1, "hello", nil
+	{
+		var checkSelect TestSimpleWorkflowAllTypesStruct
+		ok, err := pqx.SelectByKeyValue("id", 1, &checkSelect)
+		assert.Nil(err)
+		assert.True(ok)
+		assert.Equal(checkSelect.Id, int64(1))
+		assert.Equal(checkSelect.Msg, "hello")
+		assert.Equal(checkSelect.Blob, 42)
+		assert.False(checkSelect.UserId.Valid)
+	}
+
+	// update entity
+	entity.Msg = "world"
+	entity.UserId = sql.NullInt64{Int64: 42, Valid: true}
+	err = pqx.Update(&entity)
+	assert.Nil(err)
+
+	// select entity -> 1, "world", 42
+	{
+		checkSelect := TestSimpleWorkflowAllTypesStruct{Id: 1}
+		ok, err := pqx.Select(&checkSelect)
+		assert.Nil(err)
+		assert.True(ok)
+		assert.Equal(checkSelect.Id, int64(1))
+		assert.Equal(checkSelect.Msg, "world")
+		assert.True(checkSelect.UserId.Valid)
+		assert.Equal(checkSelect.UserId.Int64, int64(42))
+	}
+
+	// delete entity
+	err = pqx.Delete(&entity)
+	assert.Nil(err)
+
+	// select entity -> nothing found
+	{
+		contains, err := pqx.Contains(TestSimpleWorkflowAllTypesStruct{Id: 1})
 		assert.Nil(err)
 		assert.False(contains)
 	}

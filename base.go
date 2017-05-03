@@ -9,7 +9,7 @@ import (
 
 type queryFunc func(sql string, args pqarg.Args) (*sql.Rows, error)
 
-func logWrapper(queryFunc func(sql string, args ...interface{}), logger pqdep.Logger, sql string, args pqarg.Args) {
+func logWrapper(queryFunc func(sql string, args ...interface{}), sql string, args pqarg.Args, logger pqdep.Logger) {
 	// track duration
 	start := time.Now()
 	// execute

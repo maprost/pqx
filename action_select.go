@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
 // Select an entity via pqx.LogQuery and use a default logger for logging.
@@ -28,12 +28,15 @@ func (tx *Transaction) Select(entity interface{}) (bool, error) {
 
 // SELECT column1, column2,... FROM table_name WHERE PK = valueX (with PK tag)
 func prepareSelect(qFunc queryFunc, entity interface{}) (bool, error) {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return false, err
+	}
 
 	// search for key
-	for _, field := range structInfo.Fields() {
-		if isPrimaryKey(field) {
-			return selectFunc(qFunc, structInfo, entity, field.Name(), field.GetValue())
+	for _, column := range table.Columns() {
+		if column.PrimaryKeyTag() {
+			return selectFunc(qFunc, table, column.Name(), column.GetValue())
 		}
 	}
 	return false, errors.New("No primary key available.")
@@ -60,15 +63,18 @@ func (tx *Transaction) SelectByKeyValue(key string, value interface{}, entity in
 
 // SELECT column1, column2,... FROM table_name WHERE key = value
 func prepareSelectByKeyValue(qFunc queryFunc, key string, value interface{}, entity interface{}) (bool, error) {
-	structInfo := pqreflect.NewStructInfo(entity)
-	return selectFunc(qFunc, structInfo, entity, key, value)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return false, err
+	}
+	return selectFunc(qFunc, table, key, value)
 }
 
 // SELECT column1, column2,... FROM table_name WHERE key = value
-func selectFunc(qFunc queryFunc, structInfo pqreflect.StructInfo, entity interface{}, key string, value interface{}) (bool, error) {
+func selectFunc(qFunc queryFunc, table *pqtable.Table, key string, value interface{}) (bool, error) {
 	args := pqarg.New()
-	sql := "Select " + selectList(structInfo, "") +
-		" FROM " + structInfo.Name() +
+	sql := "Select " + selectList(table, "") +
+		" FROM " + table.Name() +
 		" WHERE " + key + " = " + args.Next(value)
 
 	rows, err := qFunc(sql, args)
@@ -81,6 +87,6 @@ func selectFunc(qFunc queryFunc, structInfo pqreflect.StructInfo, entity interfa
 		return false, nil
 	}
 
-	err = ScanStruct(rows, entity)
+	err = ScanTable(rows, table)
 	return err == nil, err
 }

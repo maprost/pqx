@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
 // Contains search for an entity via pqx.LogQuery and use a default logger for logging.
@@ -29,22 +29,25 @@ func (tx *Transaction) Contains(entity interface{}) (bool, error) {
 // prepareContains looking for the PK of the entity
 // SELECT PK FROM table_name WHERE PK = valueX (with PK tag)
 func prepareContains(qFunc queryFunc, entity interface{}) (bool, error) {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.NewCtx(entity, pqtable.Context{OnlyPrimaryKeyColumn: true})
+	if err != nil {
+		return false, err
+	}
 
 	// search for key
-	for _, field := range structInfo.Fields() {
-		if isPrimaryKey(field) {
-			return containsFunc(qFunc, structInfo, field.Name(), field.GetValue())
+	for _, column := range table.Columns() {
+		if column.PrimaryKeyTag() {
+			return containsFunc(qFunc, table, column.Name(), column.GetValue())
 		}
 	}
 	return false, errors.New("No primary key available.")
 }
 
 // SELECT PK FROM table_name WHERE PK = valueX (with PK tag)
-func containsFunc(qFunc queryFunc, structInfo pqreflect.StructInfo, key string, value interface{}) (bool, error) {
+func containsFunc(qFunc queryFunc, table *pqtable.Table, key string, value interface{}) (bool, error) {
 	args := pqarg.New()
 	sql := "Select " + key +
-		" FROM " + structInfo.Name() +
+		" FROM " + table.Name() +
 		" WHERE " + key + " = " + args.Next(value)
 
 	rows, err := qFunc(sql, args)

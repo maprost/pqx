@@ -38,7 +38,7 @@ func LogQuery(sql string, args pqarg.Args, logger pqdep.Logger) (rows *sql.Rows,
 	logWrapper(
 		func(sql string, args ...interface{}) {
 			rows, err = DB.Query(sql, args...)
-		}, logger, sql, args)
+		}, sql, args, logger)
 
 	return
 }
@@ -51,7 +51,7 @@ func LogQueryRow(sql string, args pqarg.Args, logger pqdep.Logger) (row *sql.Row
 	logWrapper(
 		func(sql string, args ...interface{}) {
 			row = DB.QueryRow(sql, args...)
-		}, logger, sql, args)
+		}, sql, args, logger)
 
 	return
 }

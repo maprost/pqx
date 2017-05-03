@@ -3,8 +3,8 @@ package pqx
 import (
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
 // Register entities via pqx.LogQueryRow and use a default logger for logging.
@@ -35,28 +35,31 @@ func registerListFunc(qFunc queryFunc, entities []interface{}) error {
 }
 
 func registerFunc(qFunc queryFunc, entity interface{}) error {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return err
+	}
 
-	exists, e := tableExists(qFunc, structInfo)
-	if e != nil {
-		return e
+	exists, err := tableExists(qFunc, table)
+	if err != nil {
+		return err
 	}
 	if exists {
 		return nil
 	}
 
-	e = createFunc(qFunc, entity)
-	return e
+	err = createFunc(qFunc, entity)
+	return err
 }
 
-func tableExists(qFunc queryFunc, structInfo pqreflect.StructInfo) (bool, error) {
+func tableExists(qFunc queryFunc, table *pqtable.Table) (bool, error) {
 	args := pqarg.New()
 	sql := "SELECT table_name FROM INFORMATION_SCHEMA.TABLES " +
-		"WHERE TABLE_NAME = " + args.Next(structInfo.Name())
-	rows, e := qFunc(sql, args)
+		"WHERE TABLE_NAME = " + args.Next(table.Name())
+	rows, err := qFunc(sql, args)
 	defer closeRows(rows)
-	if e != nil {
-		return false, e
+	if err != nil {
+		return false, err
 	}
 
 	// no table with that name is known
@@ -64,7 +67,7 @@ func tableExists(qFunc queryFunc, structInfo pqreflect.StructInfo) (bool, error)
 		return false, nil
 	}
 
-	// TODO: check columns
+	// TODO: check columns in rows
 
 	// table exists and there is no error
 	return true, nil

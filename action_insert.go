@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 	"github.com/maprost/timeutil"
 )
 
@@ -33,33 +33,36 @@ func (tx *Transaction) Insert(entity interface{}) error {
 // INSERT INTO table_name (AI, column1,column2,column3,...)
 // VALUES (DEFAULT, value1,value2,value3,...) RETURNING AI
 func insertFunc(qfunc queryFunc, entity interface{}) (err error) {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return err
+	}
 
 	columns := ""
 	values := ""
 	returning := ""
 	args := pqarg.New()
-	var autoIncrement pqreflect.Field
+	var autoIncrement pqtable.Column
 
 	// preparation of the statement
-	for _, field := range structInfo.Fields() {
-		columns = pqutil.Concate(columns, field.Name(), ",")
+	for _, column := range table.Columns() {
+		columns = pqutil.Concate(columns, column.Name(), ",")
 
-		if isAutoIncrement(field) {
-			returning = "RETURNING " + field.Name()
+		if column.AutoIncrementTag() {
+			returning = "RETURNING " + column.Name()
 			values = pqutil.Concate(values, "DEFAULT", ",")
-			autoIncrement = field
+			autoIncrement = column
 		} else {
-			if isCreateDate(field) || isChangeDate(field) {
-				field.SetTime(timeutil.Now())
+			if column.CreateDateTag() || column.ChangeDateTag() {
+				column.SetTime(timeutil.Now())
 			}
 
-			values = pqutil.Concate(values, args.Next(field.GetValue()), ",")
+			values = pqutil.Concate(values, args.Next(column.GetValue()), ",")
 		}
 	}
 
 	// execute statement
-	sql := "INSERT INTO " + structInfo.Name() + " (" + columns + ") VALUES (" + values + ")" + returning
+	sql := "INSERT INTO " + table.Name() + " (" + columns + ") VALUES (" + values + ")" + returning
 	rows, err := qfunc(sql, args)
 	defer closeRows(rows)
 	if err != nil {
@@ -77,7 +80,7 @@ func insertFunc(qfunc queryFunc, entity interface{}) (err error) {
 			return err
 		}
 		// add id to pk
-		autoIncrement.SetInt(id)
+		autoIncrement.SetInt64(id)
 	}
 
 	return nil

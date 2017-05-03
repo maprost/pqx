@@ -14,8 +14,7 @@ func TestTxCreate(t *testing.T) {
 		Id  int64
 		Msg string
 	}
-	var testStruct TestTxCreateStruct
-	err := tx.Create(&testStruct)
+	err := tx.Create(TestTxCreateStruct{})
 	assert.Nil(err)
 }
 
@@ -26,8 +25,7 @@ func TestDBCreate(t *testing.T) {
 		Id  int64
 		Msg string
 	}
-	var testStruct TestDBCreateStruct
-	err := pqx.Create(&testStruct)
+	err := pqx.Create(TestDBCreateStruct{})
 	assert.Nil(err)
 }
 
@@ -38,7 +36,17 @@ func TestDBLogCreate(t *testing.T) {
 		Id  int64
 		Msg string
 	}
-	var testStruct TestDBLogCreateStruct
-	err := pqx.LogCreate(&testStruct, pqutil.DefaultLogger)
+	err := pqx.LogCreate(TestDBLogCreateStruct{}, pqutil.DefaultLogger)
+	assert.Nil(err)
+}
+
+func TestCreateWithNullable(t *testing.T) {
+	assert := pqtest.InitDatabaseTest(t)
+
+	type TestCreateWithNullableStruct struct {
+		Id  *int64
+		Msg *string
+	}
+	err := pqx.Create(TestCreateWithNullableStruct{})
 	assert.Nil(err)
 }

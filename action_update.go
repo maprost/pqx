@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 	"github.com/maprost/timeutil"
 )
 
@@ -45,27 +45,30 @@ func (tx *Transaction) Update(entity interface{}) error {
 // ...
 // WHERE PK = valueX (with PK tag)
 func updateFunc(qFunc queryFunc, entity interface{}) error {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return err
+	}
 
 	sets := ""
 	args := pqarg.New()
 	whereClause := ""
 
 	// preparation of the statement
-	for _, field := range structInfo.Fields() {
-		if isCreateDate(field) {
+	for _, column := range table.Columns() {
+		if column.CreateDateTag() {
 			// don't change the create date
 			continue
 		}
 
-		if isPrimaryKey(field) {
-			whereClause = field.Name() + " = " + args.Next(field.GetValue())
+		if column.PrimaryKeyTag() {
+			whereClause = column.Name() + " = " + args.Next(column.GetValue())
 		} else {
-			if isChangeDate(field) {
-				field.SetTime(timeutil.Now())
+			if column.ChangeDateTag() {
+				column.SetTime(timeutil.Now())
 			}
 
-			sets = pqutil.Concate(sets, field.Name()+" = "+args.Next(field.GetValue()), ",")
+			sets = pqutil.Concate(sets, column.Name()+" = "+args.Next(column.GetValue()), ",")
 		}
 	}
 
@@ -74,7 +77,7 @@ func updateFunc(qFunc queryFunc, entity interface{}) error {
 	}
 
 	// execute statement
-	sql := "UPDATE " + structInfo.Name() + " SET " + sets + " WHERE " + whereClause
+	sql := "UPDATE " + table.Name() + " SET " + sets + " WHERE " + whereClause
 	rows, err := qFunc(sql, args)
 	closeRows(rows)
 	return err

@@ -1,14 +1,10 @@
 package pqx
 
 import (
-	"database/sql"
-	"errors"
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
-	"reflect"
-	"time"
 )
 
 /*
@@ -63,85 +59,29 @@ func (tx *Transaction) Create(entity interface{}) error {
 //		Unique(att1, att2)
 // )
 func createFunc(qFunc queryFunc, entity interface{}) error {
-	structInfo := pqreflect.NewStructInfo(entity)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		return err
+	}
 
 	lines := ""
-	for _, field := range structInfo.Fields() {
-		dbType, err := dbType(field)
-		if err != nil {
-			return err
-		}
-
-		line := "\t" + field.Name() + " " + dbType
-		if isPrimaryKey(field) {
+	for _, column := range table.Columns() {
+		line := "\t" + column.Name() + " " + column.Type().String()
+		if column.PrimaryKeyTag() {
 			line += " PRIMARY KEY"
+		}
+		if column.Nullable() {
+			line += " NULL"
+		} else {
+			line += " NOT NULL"
 		}
 
 		lines = pqutil.Concate(lines, line, ",\n")
 	}
 
 	// TODO: insert unique and foreign keys
-	sql := "CREATE TABLE " + structInfo.Name() + "(\n" + lines + "\n)"
-	rows, e := qFunc(sql, pqarg.New())
+	sql := "CREATE TABLE " + table.Name() + "(\n" + lines + "\n)"
+	rows, err := qFunc(sql, pqarg.New())
 	defer closeRows(rows)
-	return e
-}
-
-func dbType(field pqreflect.Field) (dbType string, e error) {
-	switch field.Kind() {
-	case reflect.String:
-		dbType = "text NOT NULL"
-
-	case reflect.Int8, reflect.Int16, reflect.Uint8:
-		if isAutoIncrement(field) {
-			dbType = "smallserial"
-		} else {
-			dbType = "smallint NOT NULL"
-		}
-	case reflect.Int, reflect.Int32, reflect.Uint16:
-		if isAutoIncrement(field) {
-			dbType = "serial"
-		} else {
-			dbType = "integer NOT NULL"
-		}
-	case reflect.Int64, reflect.Uint32:
-		if isAutoIncrement(field) {
-			dbType = "bigserial"
-		} else {
-			dbType = "bigint NOT NULL"
-		}
-	case reflect.Uint64:
-		dbType = "numeric NOT NULL"
-
-	case reflect.Bool:
-		dbType = "bool NOT NULL"
-
-	case reflect.Float32:
-		dbType = "real NOT NULL"
-	case reflect.Float64:
-		dbType = "double precision NOT NULL"
-
-	default:
-		// some important struct data
-		switch field.TypeInterface().(type) {
-		case time.Time:
-			dbType = "timestamp with time zone NOT NULL"
-
-		case sql.NullBool:
-			dbType = "bool NULL"
-
-		case sql.NullInt64:
-			dbType = "bigint NULL"
-
-		case sql.NullString:
-			dbType = "text NULL"
-
-		case sql.NullFloat64:
-			dbType = "double precision NULL"
-
-		default:
-			e = errors.New("Not supported field type: " + field.Name() + " (" + field.Type() + ").")
-		}
-	}
-	return
+	return err
 }

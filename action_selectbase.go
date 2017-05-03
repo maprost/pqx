@@ -1,28 +1,34 @@
 package pqx
 
 import (
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/pqx/pqutil/pqreflect"
 )
 
 func SelectList(entity interface{}) string {
-	structInfo := pqreflect.NewStructInfo(entity)
-	return selectList(structInfo, "")
+	table, err := pqtable.New(entity)
+	if err != nil {
+		panic(err)
+	}
+	return selectList(table, "")
 }
 
 func SelectListWithAlias(entity interface{}, alias string) string {
-	structInfo := pqreflect.NewStructInfo(entity)
-	return selectList(structInfo, alias)
+	table, err := pqtable.New(entity)
+	if err != nil {
+		panic(err)
+	}
+	return selectList(table, alias)
 }
 
-func selectList(structInfo pqreflect.StructInfo, alias string) string {
+func selectList(table *pqtable.Table, alias string) string {
 	list := ""
 	if alias != "" {
 		alias += "."
 	}
 
-	for _, field := range structInfo.Fields() {
-		list = pqutil.Concate(list, alias+field.Name(), ",")
+	for _, column := range table.Columns() {
+		list = pqutil.Concate(list, alias+column.Name(), ",")
 	}
 
 	return list
