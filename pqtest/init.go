@@ -1,11 +1,12 @@
 package pqtest
 
 import (
+	"log"
+	"os"
+
 	"github.com/maprost/assertion"
 	"github.com/maprost/pqx"
 	"github.com/maprost/timeutil"
-	"log"
-	"os"
 )
 
 type DataInfo struct{}
@@ -15,7 +16,7 @@ func (d DataInfo) DatabaseDriver() string {
 }
 
 func (d DataInfo) DataBase() string {
-	return "testDB"
+	return "test_pqx"
 }
 
 func (d DataInfo) Host() string {
@@ -23,7 +24,7 @@ func (d DataInfo) Host() string {
 }
 
 func (d DataInfo) Port() string {
-	return "5441"
+	return "5432"
 }
 
 func (d DataInfo) UserName() string {

@@ -4,17 +4,27 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
+	"time"
+
 	"github.com/maprost/pqx/pqnull"
 	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqtype"
-	"time"
 )
 
 type Result interface {
 	Scan(dest ...interface{}) error
 }
 
-func ScanStruct(r Result, output interface{}) error {
+func ScanStructsToList(r *sql.Rows, prototype interface{}, appendPrototypeToList func()) error {
+	table, err := pqtable.New(prototype)
+	if err != nil {
+		return err
+	}
+
+	return ScanTableToList(r, table, appendPrototypeToList)
+}
+
+func ScanStruct(r *sql.Rows, output interface{}) error {
 	table, err := pqtable.New(output)
 	if err != nil {
 		return err
@@ -23,7 +33,24 @@ func ScanStruct(r Result, output interface{}) error {
 	return ScanTable(r, table)
 }
 
+func ScanTableToList(r *sql.Rows, table *pqtable.Table, appendPrototypeToList func()) error {
+	for r.Next() {
+		err := ScanTable(r, table)
+		if err != nil {
+			return err
+		}
+		appendPrototypeToList()
+	}
+
+	return nil
+}
+
 func ScanTable(r Result, table *pqtable.Table) (err error) {
+	if table.IsPointer() == false {
+		err = errors.New("Struct must be given as pointer/reference.")
+		return
+	}
+
 	valueList := make([]interface{}, table.Len())
 	afterAction := make([]func(), table.Len())
 

@@ -2,9 +2,10 @@ package pqnull_test
 
 import (
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqx/pqnull"
 	"math"
 	"testing"
+
+	"github.com/maprost/pqx/pqnull"
 )
 
 func TestFloat64(t *testing.T) {

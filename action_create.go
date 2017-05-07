@@ -82,6 +82,6 @@ func createFunc(qFunc queryFunc, entity interface{}) error {
 	// TODO: insert unique and foreign keys
 	sql := "CREATE TABLE " + table.Name() + "(\n" + lines + "\n)"
 	rows, err := qFunc(sql, pqarg.New())
-	defer closeRows(rows)
+	closeRows(rows)
 	return err
 }

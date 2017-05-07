@@ -3,10 +3,11 @@ package pqnull_test
 import (
 	"fmt"
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqx/pqnull"
 	"math"
 	"strconv"
 	"testing"
+
+	"github.com/maprost/pqx/pqnull"
 )
 
 func TestInt64(t *testing.T) {

@@ -7,8 +7,9 @@ import (
 )
 
 type Table struct {
-	name    string
-	columns []Column
+	name      string
+	columns   []Column
+	isPointer bool
 }
 
 func New(table interface{}) (*Table, error) {
@@ -16,7 +17,13 @@ func New(table interface{}) (*Table, error) {
 }
 
 func NewCtx(table interface{}, ctx Context) (*Table, error) {
-	tableValue := reflect.Indirect(reflect.ValueOf(table))
+	isPointer := false
+	tableValue := reflect.ValueOf(table)
+	if tableValue.Kind() == reflect.Ptr {
+		isPointer = true
+		tableValue = reflect.Indirect(tableValue)
+	}
+
 	if tableValue.Kind() != reflect.Struct {
 		return nil, errors.New("Value(" + tableValue.Kind().String() + ") is not a struct.")
 	}
@@ -36,8 +43,9 @@ func NewCtx(table interface{}, ctx Context) (*Table, error) {
 	}
 
 	return &Table{
-		name:    tableName(&tableValue),
-		columns: columns}, nil
+		name:      tableName(&tableValue),
+		columns:   columns,
+		isPointer: isPointer}, nil
 }
 
 func (s *Table) Name() string {
@@ -50,6 +58,10 @@ func (s *Table) Columns() []Column {
 
 func (t *Table) Len() int {
 	return len(t.columns)
+}
+
+func (t *Table) IsPointer() bool {
+	return t.isPointer
 }
 
 func TableName(entity interface{}) string {

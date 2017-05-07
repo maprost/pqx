@@ -2,11 +2,12 @@ package pqx
 
 import (
 	"errors"
+	"github.com/maprost/timeutil"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/timeutil"
 )
 
 // Insert an entity via pqx.LogQuery and use a default logger for logging.
@@ -36,6 +37,11 @@ func insertFunc(qfunc queryFunc, entity interface{}) (err error) {
 	table, err := pqtable.New(entity)
 	if err != nil {
 		return err
+	}
+
+	if table.IsPointer() == false {
+		err = errors.New("Struct must be given as pointer/reference.")
+		return
 	}
 
 	columns := ""

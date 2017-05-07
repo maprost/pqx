@@ -3,6 +3,7 @@ package pqx
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqutil"

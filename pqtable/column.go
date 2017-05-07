@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
-	"github.com/maprost/pqx/pqnull"
-	"github.com/maprost/pqx/pqtype"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/maprost/pqx/pqnull"
+	"github.com/maprost/pqx/pqtype"
 )
 
 type Column struct {
@@ -116,8 +117,8 @@ func (c *Column) setTag(cType reflect.StructField, ctx Context) {
 
 	c.primaryKeyTag = strings.Contains(tagString, "PK")
 	c.autoIncrementTag = strings.Contains(tagString, "AI")
-	c.createDateTag = strings.Contains(tagString, "CreateDate")
-	c.changeDateTag = strings.Contains(tagString, "ChangeDate")
+	c.createDateTag = strings.Contains(tagString, "Created")
+	c.changeDateTag = strings.Contains(tagString, "Changed")
 }
 
 func (c *Column) setType(cType reflect.StructField, ctx Context) (err error) {

@@ -2,11 +2,12 @@ package pqx
 
 import (
 	"errors"
+	"github.com/maprost/timeutil"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqutil"
-	"github.com/maprost/timeutil"
 )
 
 // Update an entity via pqx.LogQuery and use a default logger for logging.
@@ -48,6 +49,10 @@ func updateFunc(qFunc queryFunc, entity interface{}) error {
 	table, err := pqtable.New(entity)
 	if err != nil {
 		return err
+	}
+
+	if table.IsPointer() == false {
+		return errors.New("Struct must be given as pointer/reference.")
 	}
 
 	sets := ""

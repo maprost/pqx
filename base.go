@@ -2,9 +2,10 @@ package pqx
 
 import (
 	"database/sql"
+	"time"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
-	"time"
 )
 
 type queryFunc func(sql string, args pqarg.Args) (*sql.Rows, error)

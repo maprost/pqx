@@ -5,23 +5,23 @@ import (
 	"github.com/maprost/pqx/pqutil"
 )
 
-func SelectList(entity interface{}) string {
+func SelectRowList(entity interface{}) string {
 	table, err := pqtable.New(entity)
 	if err != nil {
 		panic(err)
 	}
-	return selectList(table, "")
+	return selectRowList(table, "")
 }
 
-func SelectListWithAlias(entity interface{}, alias string) string {
+func SelectRowListWithAlias(entity interface{}, alias string) string {
 	table, err := pqtable.New(entity)
 	if err != nil {
 		panic(err)
 	}
-	return selectList(table, alias)
+	return selectRowList(table, alias)
 }
 
-func selectList(table *pqtable.Table, alias string) string {
+func selectRowList(table *pqtable.Table, alias string) string {
 	list := ""
 	if alias != "" {
 		alias += "."

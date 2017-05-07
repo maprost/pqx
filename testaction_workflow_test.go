@@ -1,11 +1,13 @@
 package pqx_test
 
 import (
-	"database/sql"
+	"testing"
+
 	"github.com/maprost/pqx"
+	"github.com/maprost/pqx/pqarg"
+	"github.com/maprost/pqx/pqtable"
 	"github.com/maprost/pqx/pqtest"
 	"github.com/maprost/pqx/pqutil"
-	"testing"
 )
 
 func TestSimpleWorkflow_tx(t *testing.T) {
@@ -123,137 +125,82 @@ func TestSimpleWorkflow_db(t *testing.T) {
 	}
 }
 
-func TestSimpleWorkflow_allTypes(t *testing.T) {
-	assert := pqtest.InitDatabaseTest(t)
+func TestUpdateWithoutID(t *testing.T) {
+	tx, assert := pqtest.InitTransactionTest(t)
 
-	type TestSimpleWorkflowAllTypesStruct struct {
-		Id     int64 `pqx:"PK AI"`
+	type TestUpdateWithoutIDStruct struct {
+		UserID int64
 		Msg    string
-		Blob   int
-		UserId sql.NullInt64
 	}
-
-	err := pqx.Register(TestSimpleWorkflowAllTypesStruct{})
-	assert.Nil(err)
+	tx.Register(TestUpdateWithoutIDStruct{})
 
 	// insert entity
-	entity := TestSimpleWorkflowAllTypesStruct{Msg: "hello", Blob: 42}
-	err = pqx.Insert(&entity)
+	entity := TestUpdateWithoutIDStruct{Msg: "hello", UserID: 42}
+	err := tx.Insert(&entity)
 	assert.Nil(err)
-	assert.Equal(entity.Id, int64(1))
 
-	// select entity -> 1, "hello", nil
+	// select entity -> 42, "hello"
 	{
-		var checkSelect TestSimpleWorkflowAllTypesStruct
-		ok, err := pqx.SelectByKeyValue("id", 1, &checkSelect)
+		result, err := tx.Query("SELECT "+pqx.SelectRowList(&entity)+" FROM "+
+			pqtable.TableName(&entity), pqarg.New())
 		assert.Nil(err)
-		assert.True(ok)
-		assert.Equal(checkSelect.Id, int64(1))
+		assert.True(result.Next())
+
+		var checkSelect TestUpdateWithoutIDStruct
+		err = pqx.ScanStruct(result, &checkSelect)
+		assert.Nil(err)
+		assert.Equal(checkSelect.UserID, int64(42))
 		assert.Equal(checkSelect.Msg, "hello")
-		assert.Equal(checkSelect.Blob, 42)
-		assert.False(checkSelect.UserId.Valid)
+
+		result.Close()
 	}
 
-	// update entity
+	// try to update entity -> eor
 	entity.Msg = "world"
-	entity.UserId = sql.NullInt64{Int64: 42, Valid: true}
-	err = pqx.Update(&entity)
-	assert.Nil(err)
+	err = tx.Update(&entity)
+	assert.NotNil(err)
+	assert.Equal(err.Error(), "No primary key available.")
 
-	// select entity -> 1, "world", 42
+	// select entity -> 42, "hello"
 	{
-		checkSelect := TestSimpleWorkflowAllTypesStruct{Id: 1}
-		ok, err := pqx.Select(&checkSelect)
+		result, err := tx.Query("SELECT "+pqx.SelectRowList(&entity)+
+			" FROM "+pqtable.TableName(&entity), pqarg.New())
 		assert.Nil(err)
-		assert.True(ok)
-		assert.Equal(checkSelect.Id, int64(1))
-		assert.Equal(checkSelect.Msg, "world")
-		assert.True(checkSelect.UserId.Valid)
-		assert.Equal(checkSelect.UserId.Int64, int64(42))
+		assert.True(result.Next())
+
+		var checkSelect TestUpdateWithoutIDStruct
+		err = pqx.ScanStruct(result, &checkSelect)
+		assert.Nil(err)
+		assert.Equal(checkSelect.UserID, int64(42))
+		assert.Equal(checkSelect.Msg, "hello")
+
+		result.Close()
 	}
 
-	// delete entity
-	err = pqx.Delete(&entity)
-	assert.Nil(err)
+	// try to delete entity -> eor
+	err = tx.Delete(&entity)
+	assert.NotNil(err)
+	assert.Equal(err.Error(), "No primary key available.")
 
-	// select entity -> nothing found
+	// select entity -> 42, "hello"
 	{
-		contains, err := pqx.Contains(TestSimpleWorkflowAllTypesStruct{Id: 1})
+		result, err := tx.Query("SELECT "+pqx.SelectRowList(&entity)+
+			" FROM "+pqtable.TableName(&entity), pqarg.New())
 		assert.Nil(err)
-		assert.False(contains)
+
+		var checkSelect TestUpdateWithoutIDStruct
+		err = pqx.ScanStruct(result, &checkSelect)
+		assert.Nil(err)
+		assert.Equal(checkSelect.UserID, int64(42))
+		assert.Equal(checkSelect.Msg, "hello")
+
+		result.Close()
 	}
+
+	err = tx.Commit()
+	assert.Nil(err)
 }
 
-//func TestUpdateWithoutID(t *testing.T) {
-//	tx, assert := pqtest.InitTransactionTest(t)
-//
-//	type TestUpdateWithoutIDStruct struct {
-//		UserID int64
-//		Msg    string
-//	}
-//	var testStruct TestUpdateWithoutIDStruct
-//	tx.Register(&testStruct)
-//
-//	// insert entity
-//	entity := TestUpdateWithoutIDStruct{Msg: "hello", UserID: 42}
-//	e := tx.Insert(&entity)
-//	assert.Nil(e)
-//
-//	// select entity -> 42, "hello"
-//	{
-//		result, e := tx.Query("SELECT "+pqx.SelectList(&entity)+" FROM "+
-//			tableName(&testStruct), pqarg.New())
-//		assert.Nil(e)
-//
-//		var checkSelect TestUpdateWithoutIDStruct
-//		e = pqx.ScanStruct(result, &checkSelect)
-//		assert.Nil(e)
-//		assert.Equal(checkSelect.UserID, int64(42))
-//		assert.Equal(checkSelect.Msg, "hello")
-//	}
-//
-//	// try to update entity -> eor
-//	entity.Msg = "world"
-//	e = tx.Update(&entity)
-//	assert.NotNil(e)
-//	assert.Equal(e.Error(), "No primary key available.")
-//
-//	// select entity -> 42, "hello"
-//	{
-//		result, e := tx.Query("SELECT "+pqx.SelectList(&entity)+
-//			" FROM "+tableName(&testStruct), pqarg.New())
-//		assert.Nil(e)
-//
-//		var checkSelect TestUpdateWithoutIDStruct
-//		e = pqx.ScanStruct(result, &checkSelect)
-//		assert.Nil(e)
-//		assert.Equal(checkSelect.UserID, int64(42))
-//		assert.Equal(checkSelect.Msg, "hello")
-//	}
-//
-//	// try to delete entity -> eor
-//	e = tx.Delete(&entity)
-//	assert.NotNil(e)
-//	assert.Equal(e.Error(), "No primary key available.")
-//
-//	// select entity -> 42, "hello"
-//	{
-//		result, e := tx.Query("SELECT "+pqx.SelectList(&entity)+
-//			" FROM "+tableName(&testStruct), pqarg.New())
-//		assert.Nil(e)
-//
-//		var checkSelect TestUpdateWithoutIDStruct
-//		e = pqx.ScanStruct(result, &checkSelect)
-//		assert.Nil(e)
-//		assert.Equal(checkSelect.UserID, int64(42))
-//		assert.Equal(checkSelect.Msg, "hello")
-//	}
-//
-//	e = tx.Commit()
-//	assert.Nil(e)
-//
-//}
-//
 //func TestTimeColumn_workflow(t *testing.T) {
 //	tx, assert := pqtest.InitTransactionTest(t)
 //	type TestTimeColumnStruct struct {

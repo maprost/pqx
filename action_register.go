@@ -1,6 +1,8 @@
 package pqx
 
 import (
+	"fmt"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"
@@ -57,18 +59,37 @@ func tableExists(qFunc queryFunc, table *pqtable.Table) (bool, error) {
 	sql := "SELECT table_name FROM INFORMATION_SCHEMA.TABLES " +
 		"WHERE TABLE_NAME = " + args.Next(table.Name())
 	rows, err := qFunc(sql, args)
-	defer closeRows(rows)
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
 	// no table with that name is known
 	if rows.Next() == false {
 		return false, nil
 	}
 
-	// TODO: check columns in rows
+	// table exists -> check columns
+	err = checkColumns(qFunc, table)
+	return true, err
+}
 
-	// table exists and there is no error
-	return true, nil
+func checkColumns(qFunc queryFunc, table *pqtable.Table) error {
+	sql := "Select * FROM " + table.Name() + ";"
+	rows, err := qFunc(sql, pqarg.New())
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	colTypes, err := rows.ColumnTypes()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range colTypes {
+		fmt.Println("Column:", c.Name())
+	}
+
+	return nil
 }

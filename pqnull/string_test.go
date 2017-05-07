@@ -3,9 +3,10 @@ package pqnull_test
 import (
 	"database/sql"
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqx/pqnull"
 	"reflect"
 	"testing"
+
+	"github.com/maprost/pqx/pqnull"
 )
 
 func TestString_nullString(t *testing.T) {

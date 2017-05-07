@@ -3,10 +3,11 @@ package pqnull_test
 import (
 	"github.com/lib/pq"
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqx/pqnull"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/maprost/pqx/pqnull"
 )
 
 var defaultTime time.Time = time.Now()

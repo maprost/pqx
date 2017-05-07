@@ -2,6 +2,7 @@ package pqx
 
 import (
 	"errors"
+
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"

@@ -1,10 +1,11 @@
 package pqx_test
 
 import (
+	"testing"
+
 	"github.com/maprost/pqx"
 	"github.com/maprost/pqx/pqtest"
 	"github.com/maprost/pqx/pqutil"
-	"testing"
 )
 
 func TestTxCreate(t *testing.T) {
@@ -37,16 +38,5 @@ func TestDBLogCreate(t *testing.T) {
 		Msg string
 	}
 	err := pqx.LogCreate(TestDBLogCreateStruct{}, pqutil.DefaultLogger)
-	assert.Nil(err)
-}
-
-func TestCreateWithNullable(t *testing.T) {
-	assert := pqtest.InitDatabaseTest(t)
-
-	type TestCreateWithNullableStruct struct {
-		Id  *int64
-		Msg *string
-	}
-	err := pqx.Create(TestCreateWithNullableStruct{})
 	assert.Nil(err)
 }

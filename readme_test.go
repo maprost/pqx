@@ -1,59 +1,19 @@
-[![GoDoc](https://godoc.org/github.com/mleuth/pqlib?status.svg)](https://godoc.org/github.com/mleuth/pqlib)
+package pqx_test
 
-# pqx v0.2
-Small lightweight pq library extension. 
+import (
+	"fmt"
+	"testing"
+	"time"
 
-## Features
-- log query feature
-- simplify default actions (see actions)
-- scan a struct 
-- sql parameter without $1-$n
+	"github.com/maprost/pqx"
+	"github.com/maprost/pqx/pqtest"
+)
 
-## Actions
-- insert
-- update
-- delete
-- create
-- register
-- contains (by id)
-- select (by id)
-- select (by key-value, select single element)
-- select all (select multi elements)
-- select all (by key value, select multi elements)
+func TestMailUsage(t *testing.T) {
+	assert := pqtest.InitDatabaseTest(t)
+	assert.Nil(MailUsage())
+}
 
-## Supported Types
-- Integer:
-  - `int8`, `int16`, `int`, `int32`, `int64`
-  - `sql.NullInt64` 
-  - `pqnull.Int8`,  `pqnull.Int16`, `pqnull.Int32`, `pqnull.Int`, `pqnull.Int64`
-- Unsigned Integer:
-  - `uint8`, `uint16`, `uint`, `uint32`, `uint64`
-- Float:
-  - `float32`, `float64`
-  - `sql.NullFloat64`
-  - `pqnull.Float32`, `pqnull.Float64`
-- Boolean:
-  - `bool`
-  - `sql.NullBool`
-  - `pqnull.Bool`
-- String:
-  - `string`
-  - `sql.NullString`
-  - `pqnull.String`
-- Time:
-  - `time.Time`
-  - `pq.NullTime`
-  - `pqnull.Time`
-
-## Supported Tags
-- `pqx:"PK"` -> primary key
-- `pqx:"AI"` -> auto increment
-    - available for: `int8`, `uint8`, `int16`, `uint16`, `int`, `int32`, `uint`, `uint32`, `int64`
-- `pqx:"Created"` -> set initial time automatically
-- `pqx:"Changed"` -> set initial and update time automatically
-
-## Usage
-```go
 func MailUsage() error {
 	var err error
 	type Mail struct {
@@ -120,6 +80,3 @@ func MailUsage() error {
 	fmt.Println("Contains: ", contains) // 'false'
 	return nil
 }
-
-
-```

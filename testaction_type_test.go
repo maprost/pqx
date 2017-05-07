@@ -3,11 +3,12 @@ package pqx_test
 import (
 	"database/sql"
 	"github.com/lib/pq"
+	"testing"
+	"time"
+
 	"github.com/maprost/pqx"
 	"github.com/maprost/pqx/pqnull"
 	"github.com/maprost/pqx/pqtest"
-	"testing"
-	"time"
 )
 
 func TestNullableType_insertValid_updateNil(t *testing.T) {
