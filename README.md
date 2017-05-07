@@ -106,13 +106,13 @@ func MailUsage() error {
 	fmt.Println("Id: ", mailList[0].Id)   // '1'
 	fmt.Println("Msg: ", mailList[0].Msg) // 'Bonjour monde.'
 
-	// delete mail
+	// delete mail by primary key
 	err = pqx.Delete(mail)
 	if err != nil {
 		return err
 	}
 
-	// contains mail
+	// contains mail by primary key
 	contains, err := pqx.Contains(mail)
 	if err != nil {
 		return err
