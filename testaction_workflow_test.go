@@ -187,6 +187,7 @@ func TestUpdateWithoutID(t *testing.T) {
 		result, err := tx.Query("SELECT "+pqx.SelectRowList(&entity)+
 			" FROM "+pqtable.TableName(&entity), pqarg.New())
 		assert.Nil(err)
+		assert.True(result.Next())
 
 		var checkSelect TestUpdateWithoutIDStruct
 		err = pqx.ScanStruct(result, &checkSelect)
