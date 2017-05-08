@@ -1,7 +1,10 @@
 {
-	"ImportPath": "github.com/mleuth/pqlib",
+	"ImportPath": "github.com/maprost/pqx",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/lib/pq",
@@ -14,12 +17,12 @@
 			"Rev": "2704adc878c21e1329f46f6e56a1c387d788ff94"
 		},
 		{
-			"ImportPath": "github.com/mleuth/assertion",
-			"Rev": "9f21385561ff12dc279df7df8cddc9b7563e8ebf"
+			"ImportPath": "github.com/maprost/assertion",
+			"Rev": "d383dfb17c3f8e9cc91106d0380b0dab3fb0453c"
 		},
 		{
-			"ImportPath": "github.com/mleuth/timeutil",
-			"Rev": "56bb8711453d454ea26e0a9fec3657152cc39b92"
+			"ImportPath": "github.com/maprost/timeutil",
+			"Rev": "3d151ff400d2e3cb53df013953cfd4e5d0251e62"
 		}
 	]
 }
