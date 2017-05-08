@@ -1,4 +1,7 @@
+[![Build Status](https://travis-ci.org/maprost/pqx.svg?branch=master)](https://travis-ci.org/maprost/pqx)
+[![Coverage Status](https://coveralls.io/repos/github/maprost/pqutil/badge.svg)](https://coveralls.io/github/maprost/pqutil)
 [![GoDoc](https://godoc.org/github.com/mleuth/pqlib?status.svg)](https://godoc.org/github.com/mleuth/pqlib)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maprost/pqx)](https://goreportcard.com/report/github.com/maprost/pqx)
 
 # pqx v0.2
 Small lightweight pq library extension. 
