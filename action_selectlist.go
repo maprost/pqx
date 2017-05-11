@@ -9,19 +9,19 @@ import (
 	"github.com/maprost/pqx/pqutil"
 )
 
-// Select an entity via pqx.LogQuery and use a default logger for logging.
+// Select a list of entities via pqx.LogQuery and use a default logger for logging.
 // SELECT column1, column2,... FROM table_name WHERE key = value
 func SelectListByKeyValue(key string, value interface{}, prototype interface{}, appendPrototypeToList func()) error {
 	return LogSelectListByKeyValue(key, value, prototype, appendPrototypeToList, pqutil.DefaultLogger)
 }
 
-// LogSelect select an entity via pqx.LogQuery and use a default logger for logging.
+// LogSelect select a list of entities via pqx.LogQuery and use a default logger for logging.
 // SELECT column1, column2,... FROM table_name WHERE key = value
 func LogSelectListByKeyValue(key string, value interface{}, prototype interface{}, appendPrototypeToList func(), logger pqdep.Logger) error {
 	return selectListByKeyValueFunc(queryFuncWrapper(logger), key, value, prototype, appendPrototypeToList)
 }
 
-// Select an entity via tx.LogQuery and use a tx.log for logging.
+// Select a list of entities via tx.LogQuery and use a tx.log for logging.
 // SELECT column1, column2,... FROM table_name WHERE key = value
 func (tx *Transaction) SelectListByKeyValue(key string, value interface{}, prototype interface{}, appendPrototypeToList func()) error {
 	return selectListByKeyValueFunc(tx.Query, key, value, prototype, appendPrototypeToList)
@@ -50,25 +50,25 @@ func selectListByKeyValueFunc(qFunc queryFunc, key string, value interface{}, pr
 	return ScanTableToList(rows, table, appendPrototypeToList)
 }
 
-// Select an entity via pqx.LogQuery and use a default logger for logging.
+// Select a list of all entities via pqx.LogQuery and use a default logger for logging.
 // SELECT column1, column2,... FROM table_name WHERE key = value
 func SelectList(prototype interface{}, appendPrototypeToList func()) error {
 	return LogSelectList(prototype, appendPrototypeToList, pqutil.DefaultLogger)
 }
 
-// LogSelect select an entity via pqx.LogQuery and use a default logger for logging.
-// SELECT column1, column2,... FROM table_name WHERE key = value
+// LogSelect select a list of all entities via pqx.LogQuery and use a default logger for logging.
+// SELECT column1, column2,... FROM table_name
 func LogSelectList(prototype interface{}, appendPrototypeToList func(), logger pqdep.Logger) error {
 	return selectListFunc(queryFuncWrapper(logger), prototype, appendPrototypeToList)
 }
 
-// Select an entity via tx.LogQuery and use a tx.log for logging.
-// SELECT column1, column2,... FROM table_name WHERE key = value
+// Select a list of all entities via tx.LogQuery and use a tx.log for logging.
+// SELECT column1, column2,... FROM table_name
 func (tx *Transaction) SelectList(prototype interface{}, appendPrototypeToList func()) error {
 	return selectListFunc(tx.Query, prototype, appendPrototypeToList)
 }
 
-// SELECT column1, column2,... FROM table_name WHERE key = value
+// SELECT column1, column2,... FROM table_name
 func selectListFunc(qFunc queryFunc, prototype interface{}, appendPrototypeToList func()) error {
 	table, err := pqtable.New(prototype)
 	if err != nil {
@@ -79,8 +79,7 @@ func selectListFunc(qFunc queryFunc, prototype interface{}, appendPrototypeToLis
 	}
 
 	args := pqarg.New()
-	sql := "SELECT " + selectRowList(table, "") +
-		" FROM " + table.Name()
+	sql := "SELECT " + selectRowList(table, "") + " FROM " + table.Name()
 
 	rows, err := qFunc(sql, args)
 	defer closeRows(rows)

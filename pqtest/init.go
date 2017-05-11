@@ -31,11 +31,15 @@ func (d DataInfo) UserName() string {
 	return "postgres"
 }
 
+func InitDatabase() error {
+	return pqx.OpenDatabaseConnection(DataInfo{})
+}
+
 func InitDatabaseTest(t assertion.TestEnvironment) assertion.Assert {
 	timeutil.Reset()
 	assert := assertion.New(t)
 
-	err := pqx.OpenDatabaseConnection(DataInfo{})
+	err := InitDatabase()
 	assert.Nil(err)
 
 	return assert

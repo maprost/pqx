@@ -124,5 +124,12 @@ func MailUsage() error {
 	return nil
 }
 
-
 ```
+
+## Benchmarks
+|                 | pq              | pqx             |
+|-----------------|-----------------|-----------------|
+| insert          | 1.947.991 ns/op | 1.966.197 ns/op |
+| update          | 2.095.943 ns/op | 2.065.972 ns/op |
+| select (by id)  |   136.525 ns/op |   143.076 ns/op |
+
