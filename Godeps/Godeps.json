@@ -18,11 +18,7 @@
 		},
 		{
 			"ImportPath": "github.com/maprost/assertion",
-			"Rev": "d383dfb17c3f8e9cc91106d0380b0dab3fb0453c"
-		},
-		{
-			"ImportPath": "github.com/maprost/timeutil",
-			"Rev": "3d151ff400d2e3cb53df013953cfd4e5d0251e62"
+			"Rev": "125c81c118017c7173f31538d34d6abdaaf088d5"
 		}
 	]
 }

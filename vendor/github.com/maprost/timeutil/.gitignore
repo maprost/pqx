@@ -1,6 +1,0 @@
-.idea
-bin/*
-pkg/*
-
-*.iml
-*.pyc

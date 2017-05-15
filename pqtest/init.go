@@ -1,12 +1,12 @@
 package pqtest
 
 import (
+	"github.com/maprost/assertion"
 	"log"
 	"os"
 
-	"github.com/maprost/assertion"
 	"github.com/maprost/pqx"
-	"github.com/maprost/timeutil"
+	"github.com/maprost/pqx/pqtime"
 )
 
 type DataInfo struct{}
@@ -36,7 +36,7 @@ func InitDatabase() error {
 }
 
 func InitDatabaseTest(t assertion.TestEnvironment) assertion.Assert {
-	timeutil.Reset()
+	pqtime.Reset()
 	assert := assertion.New(t)
 
 	err := InitDatabase()

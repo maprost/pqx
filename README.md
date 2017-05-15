@@ -11,6 +11,7 @@ Small lightweight pq library extension.
 - simplify default actions (see actions)
 - scan a struct 
 - sql parameter without $1-$n
+- testable time for insert/update (`pqtime`)
 
 ## Actions
 - insert
@@ -133,3 +134,7 @@ func MailUsage() error {
 | update          | 2.095.943 ns/op | 2.065.972 ns/op |
 | select (by id)  |   136.525 ns/op |   143.076 ns/op |
 
+
+## Dependencies
+- github.com/lib/pq
+- github.com/maprost/assertion *(only for testing)*

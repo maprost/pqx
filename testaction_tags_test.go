@@ -3,7 +3,6 @@ package pqx_test
 //
 //import (
 //	"github.com/maprost/pqx/pqtest"
-//	"github.com/maprost/timeutil"
 //	"testing"
 //	"time"
 //	"github.com/maprost/pqx"

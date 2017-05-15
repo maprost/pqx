@@ -2,11 +2,11 @@ package pqx
 
 import (
 	"errors"
-	"github.com/maprost/timeutil"
 
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"
+	"github.com/maprost/pqx/pqtime"
 	"github.com/maprost/pqx/pqutil"
 )
 
@@ -70,7 +70,7 @@ func updateFunc(qFunc queryFunc, entity interface{}) error {
 			whereClause = column.Name() + " = " + args.Next(column.GetValue())
 		} else {
 			if column.ChangeDateTag() {
-				column.SetTime(timeutil.Now())
+				column.SetTime(pqtime.Now())
 			}
 
 			sets = pqutil.Concate(sets, column.Name()+" = "+args.Next(column.GetValue()), ",")

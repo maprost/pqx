@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"github.com/lib/pq"
 	"github.com/maprost/assertion"
-	"github.com/maprost/pqx/pqnull"
-	"github.com/maprost/pqx/pqtable"
 	"testing"
 	"time"
+
+	"github.com/maprost/pqx/pqnull"
+	"github.com/maprost/pqx/pqtable"
 )
 
 func BenchmarkTinyTable_oneElement(b *testing.B) {

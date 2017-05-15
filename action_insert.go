@@ -2,11 +2,11 @@ package pqx
 
 import (
 	"errors"
-	"github.com/maprost/timeutil"
 
 	"github.com/maprost/pqx/pqarg"
 	"github.com/maprost/pqx/pqdep"
 	"github.com/maprost/pqx/pqtable"
+	"github.com/maprost/pqx/pqtime"
 	"github.com/maprost/pqx/pqutil"
 )
 
@@ -60,7 +60,7 @@ func insertFunc(qfunc queryFunc, entity interface{}) (err error) {
 			autoIncrement = column
 		} else {
 			if column.CreateDateTag() || column.ChangeDateTag() {
-				column.SetTime(timeutil.Now())
+				column.SetTime(pqtime.Now())
 			}
 
 			values = pqutil.Concate(values, args.Next(column.GetValue()), ",")
