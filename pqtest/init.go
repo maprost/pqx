@@ -11,11 +11,11 @@ import (
 
 type DataInfo struct{}
 
-func (d DataInfo) DatabaseDriver() string {
+func (d DataInfo) Driver() string {
 	return "postgres"
 }
 
-func (d DataInfo) DataBase() string {
+func (d DataInfo) Database() string {
 	return "test_pqx"
 }
 
@@ -27,7 +27,7 @@ func (d DataInfo) Port() string {
 	return "5432"
 }
 
-func (d DataInfo) UserName() string {
+func (d DataInfo) Username() string {
 	return "postgres"
 }
 

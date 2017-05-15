@@ -22,9 +22,9 @@ func OpenDatabaseConnection(info pqdep.ConnectionInfo) error {
 		}
 	}
 
-	DB, err = sql.Open(info.DatabaseDriver(),
-		"user="+info.UserName()+
-			" dbname="+info.DataBase()+
+	DB, err = sql.Open(info.Driver(),
+		"user="+info.Username()+
+			" dbname="+info.Database()+
 			" sslmode=disable"+
 			" host="+info.Host()+
 			" port="+info.Port())
