@@ -1,9 +1,9 @@
 package pqdep
 
 type ConnectionInfo interface {
-	DatabaseDriver() string
-	DataBase() string
+	Driver() string
+	Database() string
 	Host() string
 	Port() string
-	UserName() string
+	Username() string
 }
