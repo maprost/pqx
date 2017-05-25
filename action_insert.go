@@ -54,6 +54,7 @@ func insertFunc(qfunc queryFunc, entity interface{}) (err error) {
 	for _, column := range table.Columns() {
 		columns = pqutil.Concate(columns, column.Name(), ",")
 
+		// TODO: possibility for more defaults!!
 		if column.AutoIncrementTag() {
 			returning = "RETURNING " + column.Name()
 			values = pqutil.Concate(values, "DEFAULT", ",")
